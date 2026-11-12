@@ -141,7 +141,8 @@ class FirmwareRecovery {
     }
     throw UpdateException('The image was written, but no application answered '
         'within ${appReturn.inSeconds} s. If the unit came back as '
-        '"HealthyPi 6 Recovery", MCUboot did not accept the image; retry.');
+        '"PortaCardio 6 — recovery mode", MCUboot did not accept the image; '
+        'retry.');
   }
 }
 

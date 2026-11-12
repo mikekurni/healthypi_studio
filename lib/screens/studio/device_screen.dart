@@ -79,7 +79,7 @@ class DeviceScreenState extends State<DeviceScreen> {
                 ? HpiBadge('Connected', tone: p.success)
                 : HpiBadge('No control port', tone: p.textMuted)),
         subtitle: usb.isConnected
-            ? 'HealthyPi 6 · ${usb.connectedPortName} · '
+            ? 'PortaCardio 6 · ${usb.connectedPortName} · '
                 '${parser.protocolVersionString}'
             : 'Connect a board over USB to read its identity and update firmware',
       ),
@@ -158,7 +158,7 @@ class _IdentityCard extends StatelessWidget {
     // when it opens. A field the device did not send stays an em dash.
     final m4 = v?.m4fw ?? info?.m4fw;
     final facts = <(String, String)>[
-      ('Model', usb.isConnected || wifi.isConnected ? 'HealthyPi 6' : '—'),
+      ('Model', usb.isConnected || wifi.isConnected ? 'PortaCardio 6' : '—'),
       ('Serial', _orDash(info?.sn)),
       ('Board revision', _orDash(info?.br)),
       ('M7 firmware', _orDash(v?.m7fw ?? info?.fw ?? usb.firmwareVersion)),
@@ -710,7 +710,7 @@ class _FirmwareColumn extends StatelessWidget {
                 ),
               if (!usb.controlConnected)
                 HpiNote(
-                  'No control port. Connect the HealthyPi 6 over USB — the '
+                  'No control port. Connect the PortaCardio 6 over USB — the '
                   'second CDC interface carries the update session.',
                   color: p.accent,
                 ),

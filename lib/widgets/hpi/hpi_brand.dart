@@ -43,7 +43,7 @@ class HpiWordmark extends StatelessWidget {
           isLight ? HpiBrandAssets.wordmarkLight : HpiBrandAssets.wordmarkDark,
           height: height,
           filterQuality: FilterQuality.medium,
-          semanticLabel: 'HealthyPi 6',
+          semanticLabel: 'PortaStudio',
         ),
         if (showQualifier) ...[
           const SizedBox(width: 10),
@@ -91,7 +91,7 @@ class HpiMonoMark extends StatelessWidget {
         asset,
         width: width,
         filterQuality: FilterQuality.medium,
-        semanticLabel: 'HealthyPi 6',
+        semanticLabel: 'PortaCardio 6',
       ),
     );
   }

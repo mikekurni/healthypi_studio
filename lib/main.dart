@@ -33,7 +33,7 @@ void main() async {
     const windowOptions = WindowOptions(
       size: Size(1600, 1000),
       minimumSize: Size(1200, 800),
-      title: 'HealthyPi Studio',
+      title: 'PortaStudio',
     );
 
     windowManager.waitUntilReadyToShow(windowOptions, () async {
@@ -168,7 +168,7 @@ class _StudioApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<StudioSettings>();
     return MaterialApp(
-      title: 'HealthyPi Studio',
+      title: 'PortaStudio',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,

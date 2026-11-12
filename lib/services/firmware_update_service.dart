@@ -192,7 +192,7 @@ class FirmwareUpdateService extends ChangeNotifier {
         }
       }
       _notice = 'Recovery armed. The unit should re-enumerate as '
-          '"HealthyPi 6 Recovery"; rescan if it is not listed.';
+          '"PortaCardio 6 — recovery mode"; rescan if it is not listed.';
     } finally {
       _busy = false;
       notifyListeners();

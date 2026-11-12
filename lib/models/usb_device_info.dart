@@ -118,11 +118,11 @@ class UsbDeviceDetector {
   static String classifyDeviceType(int vid, int pid, String? product) {
     if (HealthyPiUsb.isHealthyPi6(vid, pid)) {
       if (product?.contains('Recovery') ?? false) {
-        return 'HealthyPi 6 — recovery mode';
+        return 'PortaCardio 6 — recovery mode';
       }
-      return vid == 0x2FE3 ? 'HealthyPi 6 (development build)' : 'HealthyPi 6';
+      return vid == 0x2FE3 ? 'PortaCardio 6 (development build)' : 'PortaCardio 6';
     }
-    if (vid == 0x1209 && pid == HealthyPiUsb.healthyPi5Pid) return 'HealthyPi 5';
+    if (vid == 0x1209 && pid == HealthyPiUsb.healthyPi5Pid) return 'PortaCardio 5';
     if (product != null && product.isNotEmpty) return product;
     return 'Serial port';
   }

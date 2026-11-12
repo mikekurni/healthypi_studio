@@ -143,7 +143,7 @@ class _LinkChip extends StatelessWidget {
           children: [
             HpiStatusDot(color: p.success, size: 7, pulse: true),
             Text(
-              'HealthyPi 6',
+              'PortaCardio 6',
               style: HpiText.control(p)
                   .copyWith(color: p.textPrimary, fontWeight: FontWeight.w500),
             ),
