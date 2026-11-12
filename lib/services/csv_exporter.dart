@@ -134,7 +134,7 @@ class CSVExporter {
   ) async {
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
     final lines = <String>[
-      '# HealthyPi Studio - CSV Data Export',
+      '# PortaStudio - CSV Data Export',
       '# Generated: ${dateFormat.format(DateTime.now())}',
       '#',
       '# Device: ${recording.deviceName}',
