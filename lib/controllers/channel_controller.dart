@@ -505,22 +505,20 @@ class ChannelController extends ChangeNotifier {
           final channelConfig = channelData.config;
 
           // Computed channels are not written; see the forwarding note in
-          // addDataPointsSync.
+          // addDataPointsSync. Visibility is a display choice, so it must not
+          // decide which columns the header describes.
           if (channelConfig.computed) continue;
 
-          // Only include visible channels
-          if (channelConfig.isVisible) {
-            channelInfoList.add(ChannelInfo(
-              id: channelId,
-              name: channelConfig.label,
-              unit: channelConfig.unit,
-              samplingRate: channelData.samplingRate,
-              gainFactor: 1.0,
-              offset: 0.0,
-              minValue: channelConfig.minValue,
-              maxValue: channelConfig.maxValue,
-            ));
-          }
+          channelInfoList.add(ChannelInfo(
+            id: channelId,
+            name: channelConfig.label,
+            unit: channelConfig.unit,
+            samplingRate: channelData.samplingRate,
+            gainFactor: 1.0,
+            offset: 0.0,
+            minValue: channelConfig.minValue,
+            maxValue: channelConfig.maxValue,
+          ));
         }
 
         final config = RecordingConfig(

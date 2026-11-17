@@ -122,6 +122,10 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
 
   /// The channel set the design shows on Live, in display order, using the
   /// semantic trace ramp rather than saturated primaries.
+  ///
+  /// Respiration, PPG and EEG start hidden: what a clinician opens first is the
+  /// limb leads. Hidden channels keep streaming and keep being recorded, and the
+  /// Channels inspector brings them back.
   static List<ChannelConfiguration> get liveChannels => [
         ChannelConfiguration(
           id: 'ecg1',
@@ -198,6 +202,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           minValue: -500,
           maxValue: 500,
           lineWidth: 1.8,
+          isVisible: false,
         ),
         ChannelConfiguration(
           id: 'ppg',
@@ -206,6 +211,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           color: HpiTraceRamp.dark.ppg,
           lineWidth: 1.8,
           autoScale: true,
+          isVisible: false,
         ),
         ChannelConfiguration(
           id: 'eeg1',
@@ -217,6 +223,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           lineWidth: 1.2,
           autoScale: true,
           heightRatio: 0.8,
+          isVisible: false,
         ),
         ChannelConfiguration(
           id: 'eeg2',
@@ -228,6 +235,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           lineWidth: 1.2,
           autoScale: true,
           heightRatio: 0.8,
+          isVisible: false,
         ),
       ];
 
