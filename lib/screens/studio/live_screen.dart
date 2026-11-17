@@ -698,12 +698,34 @@ class _FocusLayout extends StatelessWidget {
 }
 
 /// The vitals HUD — the same numbers as the strip, floated over the canvas.
-class _VitalsHud extends StatelessWidget {
+///
+/// Collapsible: the panel sits on top of the first trace, so it folds down to a
+/// chevron when the user wants the waveform unobstructed. State is local, so
+/// leaving focus mode and coming back starts expanded again.
+class _VitalsHud extends StatefulWidget {
   const _VitalsHud();
+
+  @override
+  State<_VitalsHud> createState() => _VitalsHudState();
+}
+
+class _VitalsHudState extends State<_VitalsHud> {
+  bool _collapsed = false;
 
   @override
   Widget build(BuildContext context) {
     final p = context.hpi;
+    if (_collapsed) {
+      return _HudPanel(
+        padding: const EdgeInsets.all(8),
+        child: _HudChevron(
+          icon: Icons.expand_more,
+          tooltip: 'Show vitals',
+          onTap: () => setState(() => _collapsed = false),
+        ),
+      );
+    }
+
     final pump = context.watch<LiveDataPump>();
     final parser = context.watch<DataParser>();
     final hrv = context.watch<HRVPacketService>();
@@ -784,7 +806,50 @@ class _VitalsHud extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(width: 16),
+          Container(width: 1, height: 24, color: p.hudOutline),
+          const SizedBox(width: 8),
+          _HudChevron(
+            icon: Icons.expand_less,
+            tooltip: 'Hide vitals',
+            onTap: () => setState(() => _collapsed = true),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// The HUD's fold control: one icon, no chrome of its own.
+class _HudChevron extends StatelessWidget {
+  const _HudChevron({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.hpi;
+    return Semantics(
+      button: true,
+      label: tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: Icon(icon, size: 18, color: p.textMuted),
+            ),
+          ),
+        ),
       ),
     );
   }
