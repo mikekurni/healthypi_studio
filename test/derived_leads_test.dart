@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:healthypi_studio/controllers/channel_controller.dart';
 import 'package:healthypi_studio/models/waveform_models.dart';
 import 'package:healthypi_studio/services/live_data_pump.dart';
+import 'package:healthypi_studio/theme/hpi_tokens.dart';
 
 /// Captures what would have reached the recorder.
 class _FakeBridge {
@@ -25,6 +26,17 @@ void main() {
         LiveDataPump.derivedLeads(0, 0).values.every((v) => v == 0),
         isTrue,
       );
+    });
+
+    test('the seven ECG leads darken from Lead I to V1 in both themes', () {
+      const ids = ['ecg1', 'ecg2', 'lead_iii', 'avr', 'avl', 'avf', 'ecg3'];
+      for (final ramp in [HpiTraceRamp.dark, HpiTraceRamp.light]) {
+        for (var i = 1; i < ids.length; i++) {
+          expect(ramp.forChannel(ids[i]).computeLuminance(),
+              lessThan(ramp.forChannel(ids[i - 1]).computeLuminance()),
+              reason: '${ids[i]} must be darker than ${ids[i - 1]}');
+        }
+      }
     });
 
     test('are marked computed and never reach the recording bridge', () {

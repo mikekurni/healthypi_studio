@@ -312,12 +312,16 @@ class HpiPalette extends ThemeExtension<HpiPalette> {
 }
 
 /// The semantic trace ramp. ECG leads share the amber family on purpose so the
-/// three leads read as one modality.
+/// seven leads read as one modality, ordered light to dark from Lead I to V1.
 @immutable
 class HpiTraceRamp {
   const HpiTraceRamp({
     required this.ecg1,
     required this.ecg2,
+    required this.leadIii,
+    required this.avr,
+    required this.avl,
+    required this.avf,
     required this.ecg3,
     required this.respiration,
     required this.ppg,
@@ -325,11 +329,14 @@ class HpiTraceRamp {
     required this.eeg1,
     required this.eeg2,
     required this.temperature,
-    required this.derived,
   });
 
   final Color ecg1;
   final Color ecg2;
+  final Color leadIii;
+  final Color avr;
+  final Color avl;
+  final Color avf;
   final Color ecg3;
   final Color respiration;
   final Color ppg;
@@ -338,35 +345,37 @@ class HpiTraceRamp {
   final Color eeg2;
   final Color temperature;
 
-  /// Computed ECG leads (III, aVR, aVL, aVF) share one muted tone on purpose:
-  /// the colour says "derived", and their gutter says it in words too.
-  final Color derived;
-
   static const HpiTraceRamp dark = HpiTraceRamp(
     ecg1: Color(0xFFFBBF24),
     ecg2: Color(0xFFF59E0B),
-    ecg3: Color(0xFFD97706),
+    leadIii: Color(0xFFE88F0B),
+    avr: Color(0xFFDB800A),
+    avl: Color(0xFFCE710A),
+    avf: Color(0xFFC16209),
+    ecg3: Color(0xFFB45309),
     respiration: Color(0xFF4CC38A),
     ppg: Color(0xFF6FB3CC),
     ppgIr: Color(0xFF4E8FA8),
     eeg1: Color(0xFF8B84F0),
     eeg2: Color(0xFFA78BFA),
     temperature: Color(0xFFFB923C),
-    derived: Color(0xFF94A3B8),
   );
 
   /// Traces darken one step in the light theme so they hold on white.
   static const HpiTraceRamp light = HpiTraceRamp(
     ecg1: Color(0xFFB45309),
     ecg2: Color(0xFF92400E),
-    ecg3: Color(0xFF7C2D12),
+    leadIii: Color(0xFF873C0D),
+    avr: Color(0xFF7C370D),
+    avl: Color(0xFF72330C),
+    avf: Color(0xFF672E0C),
+    ecg3: Color(0xFF5C2A0B),
     respiration: Color(0xFF15803D),
     ppg: Color(0xFF2C6E84),
     ppgIr: Color(0xFF1F5566),
     eeg1: Color(0xFF4338CA),
     eeg2: Color(0xFF6D28D9),
     temperature: Color(0xFFC2410C),
-    derived: Color(0xFF475569),
   );
 
   HpiTraceRamp lerp(HpiTraceRamp other, double t) {
@@ -374,6 +383,10 @@ class HpiTraceRamp {
     return HpiTraceRamp(
       ecg1: c(ecg1, other.ecg1),
       ecg2: c(ecg2, other.ecg2),
+      leadIii: c(leadIii, other.leadIii),
+      avr: c(avr, other.avr),
+      avl: c(avl, other.avl),
+      avf: c(avf, other.avf),
       ecg3: c(ecg3, other.ecg3),
       respiration: c(respiration, other.respiration),
       ppg: c(ppg, other.ppg),
@@ -381,7 +394,6 @@ class HpiTraceRamp {
       eeg1: c(eeg1, other.eeg1),
       eeg2: c(eeg2, other.eeg2),
       temperature: c(temperature, other.temperature),
-      derived: c(derived, other.derived),
     );
   }
 
@@ -392,6 +404,14 @@ class HpiTraceRamp {
         return ecg1;
       case 'ecg2':
         return ecg2;
+      case 'lead_iii':
+        return leadIii;
+      case 'avr':
+        return avr;
+      case 'avl':
+        return avl;
+      case 'avf':
+        return avf;
       case 'ecg3':
         return ecg3;
       case 'respiration':
@@ -406,11 +426,6 @@ class HpiTraceRamp {
         return eeg2;
       case 'temperature':
         return temperature;
-      case 'lead_iii':
-      case 'avr':
-      case 'avl':
-      case 'avf':
-        return derived;
       default:
         return ppg;
     }
