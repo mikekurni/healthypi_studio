@@ -610,161 +610,162 @@ class _FirmwareColumn extends StatelessWidget {
     final outcome = fw.outcome;
     final fraction = fw.progress.fraction;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        HpiCard(
-          borderColor: fw.busy || fw.source != FirmwareSource.none
-              ? p.accent.withValues(alpha: 0.35)
-              : null,
-          child: HpiColumn(
-            gap: 12,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.system_update, size: 18, color: p.accent),
-                  const SizedBox(width: 9),
-                  Expanded(child: HpiSectionTitle('Firmware update')),
-                ],
-              ),
-              _FileRow(
-                label: 'Firmware bundle (.zip)',
-                path: fw.path,
-                enabled: !fw.busy,
-                onPick: () => _pickFirmware(context),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: HpiGhostButton(
-                  label: 'Already unzipped? Choose the folder…',
-                  height: 28,
-                  onPressed: fw.busy ? null : () => _pickFirmwareFolder(context),
-                ),
-              ),
-              if (fw.selectionError case final e?)
-                HpiNote(e, color: p.error)
-              else if (bundle != null) ...[
-                HpiKeyValue('Release', bundle.release),
-                for (final name in FirmwareBundle.applyOrder)
-                  if (bundle.images[name] case final img?)
-                    HpiKeyValue(name.toUpperCase(), img.version),
-                HpiKeyValue('Signed by', bundle.signer.label,
-                    valueColor:
-                        bundle.signer.development ? p.warning : p.success),
-              ] else if (fw.source == FirmwareSource.rawM7) ...[
-                HpiKeyValue('M7 image', fw.rawVersion ?? '—'),
-                HpiNote(
-                  'A single M7 image, outside a bundle: there is no manifest '
-                  'signature to check, and the M4 is left as it is. MCUboot '
-                  'still verifies the image signature before booting it. If '
-                  'this came out of a release zip, select the zip, or the '
-                  'folder it was extracted to, instead.',
-                  color: p.warning,
-                ),
-              ],
-              if (fw.busy) ...[
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          HpiCard(
+            borderColor: fw.busy || fw.source != FirmwareSource.none
+                ? p.accent.withValues(alpha: 0.35)
+                : null,
+            child: HpiColumn(
+              gap: 12,
+              children: [
                 Row(
                   children: [
-                    Expanded(
-                      child: HpiMono(_stageLabel(fw.progress.stage),
-                          size: 11, color: p.textSecondary),
-                    ),
-                    if (fraction != null)
-                      HpiMono('${(fraction * 100).toStringAsFixed(0)}%',
-                          size: 11, color: p.accent),
+                    Icon(Icons.system_update, size: 18, color: p.accent),
+                    const SizedBox(width: 9),
+                    Expanded(child: HpiSectionTitle('Firmware update')),
                   ],
                 ),
-                HpiMeter(fraction: fraction ?? 0, color: p.accent, height: 6),
-              ],
-              if (fw.notice case final n?) HpiNote(n, color: p.accent),
-              if (fw.error case final e?)
-                HpiNote(e, color: p.error)
-              else if (fw.recovered case final r?)
-                HpiNote(
-                  'Recovered: the application is back on '
-                  '${r.port.split('/').last} running M7 ${r.m7}.'
-                  '${r.m4Behind ? ' The M4 is behind; install the bundle '
-                      'again to bring it into line.' : ''}',
-                  color: r.m4Behind ? p.warning : p.success,
-                )
-              else if (outcome != null)
-                HpiNote(
-                  outcome.applied.isEmpty
-                      ? 'Nothing to install: the device already runs these '
-                          'versions.'
-                      : outcome.ok
-                          ? 'Installed and verified. The device reports '
-                              'M7 ${outcome.versionsAfter['m7'] ?? '—'}, '
-                              'M4 ${_orDash(outcome.versionsAfter['m4'])}.'
-                          : 'The device came back, but did not report the '
-                              'expected firmware. See the log below.',
-                  color: outcome.ok ? p.success : p.error,
+                _FileRow(
+                  label: 'Firmware bundle (.zip)',
+                  path: fw.path,
+                  enabled: !fw.busy,
+                  onPick: () => _pickFirmware(context),
                 ),
-              if (fw.log.isNotEmpty)
-                HpiWell(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: HpiMono(fw.log.join('\n'),
-                        size: 10.5, color: p.textSecondary),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: HpiGhostButton(
+                    label: 'Already unzipped? Choose the folder…',
+                    height: 28,
+                    onPressed: fw.busy ? null : () => _pickFirmwareFolder(context),
                   ),
                 ),
-              if (!usb.controlConnected)
-                HpiNote(
-                  'No control port. Connect the PortaCardio 6 over USB — the '
-                  'second CDC interface carries the update session.',
-                  color: p.accent,
-                ),
-              const HpiRule(),
-              HpiNote(
-                'Keep the board connected. Streaming pauses during the update, '
-                'and the device reboots, twice if the M7 changed, before '
-                'Studio reads back the installed versions. An older M7 is '
-                'refused before upload: MCUboot would not boot it.',
-              ),
-              if (fw.busy)
-                HpiGhostButton(
-                  label: 'Update in progress…',
-                  icon: Icons.hourglass_top,
-                  expand: true,
-                  onPressed: null,
-                )
-              else
-                HpiGhostButton(
-                  label: 'Install firmware',
-                  icon: Icons.upload,
-                  expand: true,
-                  tone: p.accent,
-                  onPressed: fw.canInstall ? fw.install : null,
-                ),
-              for (final r in usb.recoveryPorts) ...[
+                if (fw.selectionError case final e?)
+                  HpiNote(e, color: p.error)
+                else if (bundle != null) ...[
+                  HpiKeyValue('Release', bundle.release),
+                  for (final name in FirmwareBundle.applyOrder)
+                    if (bundle.images[name] case final img?)
+                      HpiKeyValue(name.toUpperCase(), img.version),
+                  HpiKeyValue('Signed by', bundle.signer.label,
+                      valueColor:
+                          bundle.signer.development ? p.warning : p.success),
+                ] else if (fw.source == FirmwareSource.rawM7) ...[
+                  HpiKeyValue('M7 image', fw.rawVersion ?? '—'),
+                  HpiNote(
+                    'A single M7 image, outside a bundle: there is no manifest '
+                    'signature to check, and the M4 is left as it is. MCUboot '
+                    'still verifies the image signature before booting it. If '
+                    'this came out of a release zip, select the zip, or the '
+                    'folder it was extracted to, instead.',
+                    color: p.warning,
+                  ),
+                ],
+                if (fw.busy) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: HpiMono(_stageLabel(fw.progress.stage),
+                            size: 11, color: p.textSecondary),
+                      ),
+                      if (fraction != null)
+                        HpiMono('${(fraction * 100).toStringAsFixed(0)}%',
+                            size: 11, color: p.accent),
+                    ],
+                  ),
+                  HpiMeter(fraction: fraction ?? 0, color: p.accent, height: 6),
+                ],
+                if (fw.notice case final n?) HpiNote(n, color: p.accent),
+                if (fw.error case final e?)
+                  HpiNote(e, color: p.error)
+                else if (fw.recovered case final r?)
+                  HpiNote(
+                    'Recovered: the application is back on '
+                    '${r.port.split('/').last} running M7 ${r.m7}.'
+                    '${r.m4Behind ? ' The M4 is behind; install the bundle '
+                        'again to bring it into line.' : ''}',
+                    color: r.m4Behind ? p.warning : p.success,
+                  )
+                else if (outcome != null)
+                  HpiNote(
+                    outcome.applied.isEmpty
+                        ? 'Nothing to install: the device already runs these '
+                            'versions.'
+                        : outcome.ok
+                            ? 'Installed and verified. The device reports '
+                                'M7 ${outcome.versionsAfter['m7'] ?? '—'}, '
+                                'M4 ${_orDash(outcome.versionsAfter['m4'])}.'
+                            : 'The device came back, but did not report the '
+                                'expected firmware. See the log below.',
+                    color: outcome.ok ? p.success : p.error,
+                  ),
+                if (fw.log.isNotEmpty)
+                  HpiWell(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: HpiMono(fw.log.join('\n'),
+                          size: 10.5, color: p.textSecondary),
+                    ),
+                  ),
+                if (!usb.controlConnected)
+                  HpiNote(
+                    'No control port. Connect the PortaCardio 6 over USB — the '
+                    'second CDC interface carries the update session.',
+                    color: p.accent,
+                  ),
                 const HpiRule(),
-                HpiKeyValue('Recovery mode', r.portName.split('/').last,
-                    valueColor: p.warning),
                 HpiNote(
-                  'Recovery writes the selected M7 straight into the running '
-                  'slot. It bypasses downgrade protection and leaves the M4 '
-                  'as it is.',
+                  'Keep the board connected. Streaming pauses during the update, '
+                  'and the device reboots, twice if the M7 changed, before '
+                  'Studio reads back the installed versions. An older M7 is '
+                  'refused before upload: MCUboot would not boot it.',
                 ),
-                HpiGhostButton(
-                  label: 'Recover with the selected firmware',
-                  icon: Icons.healing,
-                  expand: true,
-                  tone: p.warning,
-                  onPressed: fw.canRecover ? () => fw.recover(r.portName) : null,
+                if (fw.busy)
+                  HpiGhostButton(
+                    label: 'Update in progress…',
+                    icon: Icons.hourglass_top,
+                    expand: true,
+                    onPressed: null,
+                  )
+                else
+                  HpiGhostButton(
+                    label: 'Install firmware',
+                    icon: Icons.upload,
+                    expand: true,
+                    tone: p.accent,
+                    onPressed: fw.canInstall ? fw.install : null,
+                  ),
+                for (final r in usb.recoveryPorts) ...[
+                  const HpiRule(),
+                  HpiKeyValue('Recovery mode', r.portName.split('/').last,
+                      valueColor: p.warning),
+                  HpiNote(
+                    'Recovery writes the selected M7 straight into the running '
+                    'slot. It bypasses downgrade protection and leaves the M4 '
+                    'as it is.',
+                  ),
+                  HpiGhostButton(
+                    label: 'Recover with the selected firmware',
+                    icon: Icons.healing,
+                    expand: true,
+                    tone: p.warning,
+                    onPressed: fw.canRecover ? () => fw.recover(r.portName) : null,
+                  ),
+                ],
+                // Present but unavailable, with the reason, per the honesty rule.
+                HpiActionRow(
+                  icon: Icons.wifi,
+                  title: 'Update over Wi-Fi — needs the HealthyBridge SMP relay, '
+                      'not yet in the ESP32 firmware',
                 ),
               ],
-              // Present but unavailable, with the reason, per the honesty rule.
-              HpiActionRow(
-                icon: Icons.wifi,
-                title: 'Update over Wi-Fi — needs the HealthyBridge SMP relay, '
-                    'not yet in the ESP32 firmware',
-              ),
-            ],
+            ),
           ),
-        ),
-        kCardGap,
-        Expanded(
-          child: HpiCard(
+          kCardGap,
+          HpiCard(
             child: HpiColumn(
               gap: 10,
               children: [
@@ -849,8 +850,8 @@ class _FirmwareColumn extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
