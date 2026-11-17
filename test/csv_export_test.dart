@@ -63,6 +63,7 @@ void main() {
 
     expect(out, isNotNull);
     final lines = await File(out!).readAsLines();
+    expect(lines.first, contains('PortaStudio Export'));
     final data = lines.where((l) => !l.startsWith('#')).toList();
     // One header row plus one row per sample.
     expect(data.length, 11);

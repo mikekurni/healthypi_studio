@@ -127,7 +127,7 @@ class ConnectScreenState extends State<ConnectScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Plug a HealthyPi 6 in over USB, or reach it over WiFi. Studio '
+                'Plug a PortaCardio 6 in over USB, or reach it over WiFi. Studio '
                 'keeps showing demo data until a real device is attached.',
                 textAlign: TextAlign.center,
                 style: HpiText.body(p).copyWith(fontSize: 13, height: 1.6),
@@ -387,7 +387,7 @@ class ConnectScreenState extends State<ConnectScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'HealthyPi over WiFi',
+                  'PortaCardio over WiFi',
                   style: HpiText.uiTitle(p).copyWith(fontSize: 13),
                 ),
                 const SizedBox(height: 4),

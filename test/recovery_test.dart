@@ -30,7 +30,7 @@ void main() {
 
     test('1209:FF90 is a HealthyPi 5, not a 6', () {
       expect(HealthyPiUsb.isHealthyPi6(0x1209, 0xFF90), isFalse);
-      expect(_port(0x1209, 0xFF90).displayName, 'HealthyPi 5');
+      expect(_port(0x1209, 0xFF90).displayName, 'PortaCardio 5');
     });
 
     test('recovery is told by the product string, same VID/PID', () {
@@ -38,7 +38,13 @@ void main() {
       final app = _port(0x1209, 0xFF91, product: 'HealthyPi 6');
       expect(rec.isRecovery, isTrue);
       expect(app.isRecovery, isFalse);
-      expect(rec.displayName, contains('recovery'));
+      expect(rec.displayName, 'PortaCardio 6 — recovery mode');
+      expect(app.displayName, 'PortaCardio 6');
+    });
+
+    test('a development build is labelled as one', () {
+      expect(_port(0x2FE3, 0x0100).displayName,
+          'PortaCardio 6 (development build)');
     });
   });
 

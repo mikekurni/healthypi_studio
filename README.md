@@ -35,7 +35,7 @@ With no board attached, every screen runs against a built-in signal generator.
 
 ## Get started
 
-Desktop only, and HealthyPi 6 only. **macOS** 10.15+ (Intel and Apple Silicon,
+Desktop only, and PortaCardio 6 only. **macOS** 12+ (Intel and Apple Silicon,
 sandboxed), **Windows** 10+ x64, and **Linux** x64/arm64 on GTK 3. There is no
 mobile or web build — a browser cannot open a serial port or a raw TCP socket.
 
@@ -49,7 +49,7 @@ blocked; right-click and choose **Open**, or clear the quarantine flag. On Linux
 join the `dialout` group so the app can open the board's serial ports:
 
 ```sh
-xattr -dr com.apple.quarantine "HealthyPi Studio.app" # macOS
+xattr -dr com.apple.quarantine "PortaStudio.app" # macOS
 sudo usermod -aG dialout "$USER"                      # Linux — log out and back in
 ```
 

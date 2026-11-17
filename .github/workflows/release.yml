@@ -1,14 +1,14 @@
-# Build HealthyPi Studio desktop release binaries.
+# Build PortaStudio desktop release binaries.
 #
 # Triggers:
 #   - Git tags matching v* (e.g. v1.0.0) → create a GitHub Release
 #   - workflow_dispatch → manual build; upload workflow artifacts only
 #
 # Artifacts:
-#   HealthyPiStudio-linux-x64.zip
-#   HealthyPiStudio-linux-arm64.zip     (Raspberry Pi and other ARM SBCs)
-#   HealthyPiStudio-windows-x64.zip
-#   HealthyPiStudio-macos-universal.zip (Intel + Apple Silicon; ad-hoc signed)
+#   PortaStudio-linux-x64.zip
+#   PortaStudio-linux-arm64.zip     (Raspberry Pi and other ARM SBCs)
+#   PortaStudio-windows-x64.zip
+#   PortaStudio-macos-universal.zip (Intel + Apple Silicon; ad-hoc signed)
 #   SHA256SUMS.txt
 #
 # Desktop only, and it stays that way: the android/, ios/ and web/ targets were
@@ -107,13 +107,13 @@ jobs:
       - name: Package
         run: |
           cd build/linux/x64/release/bundle
-          zip -r "$GITHUB_WORKSPACE/HealthyPiStudio-linux-x64.zip" .
+          zip -r "$GITHUB_WORKSPACE/PortaStudio-linux-x64.zip" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HealthyPiStudio-linux-x64
-          path: HealthyPiStudio-linux-x64.zip
+          name: PortaStudio-linux-x64
+          path: PortaStudio-linux-x64.zip
           if-no-files-found: error
 
   # ── Linux desktop (ARM64) ──────────────────────────────────────────────
@@ -162,13 +162,13 @@ jobs:
       - name: Package
         run: |
           cd build/linux/arm64/release/bundle
-          zip -r "$GITHUB_WORKSPACE/HealthyPiStudio-linux-arm64.zip" .
+          zip -r "$GITHUB_WORKSPACE/PortaStudio-linux-arm64.zip" .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HealthyPiStudio-linux-arm64
-          path: HealthyPiStudio-linux-arm64.zip
+          name: PortaStudio-linux-arm64
+          path: PortaStudio-linux-arm64.zip
           if-no-files-found: error
 
   # ── Windows desktop ────────────────────────────────────────────────────
@@ -206,13 +206,13 @@ jobs:
         shell: pwsh
         run: |
           Compress-Archive -Path build/windows/x64/runner/Release/* `
-            -DestinationPath HealthyPiStudio-windows-x64.zip -Force
+            -DestinationPath PortaStudio-windows-x64.zip -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HealthyPiStudio-windows-x64
-          path: HealthyPiStudio-windows-x64.zip
+          name: PortaStudio-windows-x64
+          path: PortaStudio-windows-x64.zip
           if-no-files-found: error
 
   # ── macOS desktop ──────────────────────────────────────────────────────
@@ -228,8 +228,8 @@ jobs:
   # signing + notarization is a follow-up.
   #
   # Built as a universal binary (x86_64 + arm64) so a single download runs on
-  # both Intel and Apple Silicon Macs. The deployment target is 10.15, so Intel
-  # support reaches back to Catalina.
+  # both Intel and Apple Silicon Macs. The deployment target is 12.0, so Intel
+  # support reaches back to Monterey.
   macos:
     name: macOS universal
     needs: version
@@ -275,15 +275,15 @@ jobs:
 
       - name: Package
         run: |
-          app="$RUNNER_TEMP/dd/Build/Products/Release/HealthyPi Studio.app"
+          app="$RUNNER_TEMP/dd/Build/Products/Release/PortaStudio.app"
           if [ ! -d "$app" ]; then
-            echo "::error::HealthyPi Studio.app not found at $app"
+            echo "::error::PortaStudio.app not found at $app"
             find "$RUNNER_TEMP/dd/Build/Products" -maxdepth 3 -name '*.app' || true
             exit 1
           fi
           # Fail if the main binary is not actually universal.
-          archs=$(lipo -archs "$app/Contents/MacOS/HealthyPi Studio")
-          echo "HealthyPi Studio binary archs: $archs"
+          archs=$(lipo -archs "$app/Contents/MacOS/PortaStudio")
+          echo "PortaStudio binary archs: $archs"
           for want in x86_64 arm64; do
             case " $archs " in
               *" $want "*) ;;
@@ -292,13 +292,13 @@ jobs:
           done
           codesign --verify --strict --verbose=2 "$app"
           # ditto (not zip) preserves app-bundle metadata and symlinks.
-          ditto -c -k --sequesterRsrc --keepParent "$app" HealthyPiStudio-macos-universal.zip
+          ditto -c -k --sequesterRsrc --keepParent "$app" PortaStudio-macos-universal.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: HealthyPiStudio-macos-universal
-          path: HealthyPiStudio-macos-universal.zip
+          name: PortaStudio-macos-universal
+          path: PortaStudio-macos-universal.zip
           if-no-files-found: error
 
   # ── Publish GitHub Release (tags only) ─────────────────────────────────
@@ -329,10 +329,10 @@ jobs:
           fail_on_unmatched_files: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
-            release/HealthyPiStudio-linux-x64.zip
-            release/HealthyPiStudio-linux-arm64.zip
-            release/HealthyPiStudio-windows-x64.zip
-            release/HealthyPiStudio-macos-universal.zip
+            release/PortaStudio-linux-x64.zip
+            release/PortaStudio-linux-arm64.zip
+            release/PortaStudio-windows-x64.zip
+            release/PortaStudio-macos-universal.zip
             release/SHA256SUMS.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

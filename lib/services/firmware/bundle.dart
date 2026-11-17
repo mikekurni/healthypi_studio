@@ -104,7 +104,7 @@ class FirmwareBundle {
     }
     if (manifest['product'] != 'healthypi6') {
       throw BundleException(
-          'bundle is for "${manifest['product']}", not HealthyPi 6');
+          'bundle is for "${manifest['product']}", not PortaCardio 6');
     }
 
     final images = <String, BundleImage>{};
