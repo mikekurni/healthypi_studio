@@ -7,19 +7,19 @@ class HpiBrandAssets {
   HpiBrandAssets._();
 
   /// Wordmark for dark chrome (light ink + amber "6").
-  static const String wordmarkDark = 'assets/brand/hpi6-wordmark-dark.png';
+  static const String wordmarkDark = 'assets/brand/pc6-wordmark-dark.png';
 
   /// Wordmark for light chrome (dark ink + amber "6").
-  static const String wordmarkLight = 'assets/brand/hpi6-wordmark-light.png';
+  static const String wordmarkLight = 'assets/brand/pc6-wordmark-light.png';
 
   /// Full mono lockup in brand blue — device identity cards.
-  static const String monoBlue = 'assets/brand/hpi6-mono-blue.png';
+  static const String monoBlue = 'assets/brand/pc6-mono-blue.png';
 
   /// Full mono lockup in white — dimmed empty states on dark chrome.
-  static const String monoWhite = 'assets/brand/hpi6-mono-white.png';
+  static const String monoWhite = 'assets/brand/pc6-mono-white.png';
 
   /// Round app mark — About and window/app icon contexts.
-  static const String round = 'assets/brand/logo-round.png';
+  static const String round = 'assets/brand/pc6-logo-round.png';
 }
 
 /// The app-bar lockup: theme-correct wordmark + the "STUDIO" qualifier.
@@ -43,7 +43,7 @@ class HpiWordmark extends StatelessWidget {
           isLight ? HpiBrandAssets.wordmarkLight : HpiBrandAssets.wordmarkDark,
           height: height,
           filterQuality: FilterQuality.medium,
-          semanticLabel: 'PortaStudio',
+          semanticLabel: 'PortaCardio 6 Studio',
         ),
         if (showQualifier) ...[
           const SizedBox(width: 10),
