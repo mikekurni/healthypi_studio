@@ -44,6 +44,11 @@ class ChannelConfiguration {
   /// Height ratio for this channel (1.0 = normal, 0.75 = 75% height)
   double heightRatio;
 
+  /// True for a channel the app derives from measured channels (Lead III and
+  /// the augmented leads). It is drawn and read like any other channel but is
+  /// never written to a recording: it can be rebuilt from Lead I and II.
+  final bool computed;
+
   ChannelConfiguration({
     required this.id,
     required this.label,
@@ -59,6 +64,7 @@ class ChannelConfiguration {
     this.decimalPlaces = 2,
     this.gridColor = const Color(0xFF415A77),
     this.heightRatio = 1.0,
+    this.computed = false,
   });
 
   /// Create a copy with modified values
@@ -77,6 +83,7 @@ class ChannelConfiguration {
     int? decimalPlaces,
     Color? gridColor,
     double? heightRatio,
+    bool? computed,
   }) {
     return ChannelConfiguration(
       id: id ?? this.id,
@@ -93,6 +100,7 @@ class ChannelConfiguration {
       decimalPlaces: decimalPlaces ?? this.decimalPlaces,
       gridColor: gridColor ?? this.gridColor,
       heightRatio: heightRatio ?? this.heightRatio,
+      computed: computed ?? this.computed,
     );
   }
 }

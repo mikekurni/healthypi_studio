@@ -99,6 +99,10 @@ class ChannelController extends ChangeNotifier {
       case 'ecg1':
       case 'ecg2':
       case 'ecg3':
+      case 'lead_iii':
+      case 'avr':
+      case 'avl':
+      case 'avf':
       case 'respiration':
       case 'adc1':
       case 'adc2':
@@ -346,9 +350,18 @@ class ChannelController extends ChangeNotifier {
       }
     }
 
-    // Forward to recording bridge if recording is active
+    // Forward to recording bridge if recording is active.
+    //
+    // Computed channels (Lead III, aVR, aVL, aVF) stay out: they are a display
+    // transform of the measured leads, so the file holds only what the device
+    // reported and an analysis tool rebuilds the rest from Lead I and II.
     if (_recordingBridge != null) {
-      _recordingBridge.onDataAdded(processedValues);
+      final recorded = <String, double>{};
+      for (final entry in processedValues.entries) {
+        if (_channels[entry.key]?.config.computed ?? false) continue;
+        recorded[entry.key] = entry.value;
+      }
+      _recordingBridge.onDataAdded(recorded);
     }
 
     // Auto-scale channels that have autoscale enabled
@@ -490,6 +503,10 @@ class ChannelController extends ChangeNotifier {
           final channelId = entry.key;
           final channelData = entry.value;
           final channelConfig = channelData.config;
+
+          // Computed channels are not written; see the forwarding note in
+          // addDataPointsSync.
+          if (channelConfig.computed) continue;
 
           // Only include visible channels
           if (channelConfig.isVisible) {

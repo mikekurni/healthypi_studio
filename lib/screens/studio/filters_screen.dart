@@ -264,7 +264,15 @@ class FiltersScreenState extends State<FiltersScreen> {
         ModalityChain(
           id: 'ecg',
           name: 'ECG',
-          channelIds: const ['ecg1', 'ecg2', 'ecg3'],
+          channelIds: const [
+            'ecg1',
+            'ecg2',
+            'ecg3',
+            'lead_iii',
+            'avr',
+            'avl',
+            'avf',
+          ],
           samplingRate: 500,
           stages: [
             FilterStage(

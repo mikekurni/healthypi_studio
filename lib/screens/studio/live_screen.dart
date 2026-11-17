@@ -390,11 +390,16 @@ class _Canvas extends StatelessWidget {
   /// Lead-off as the device reports it: per electrode for ECG (a lead is off
   /// when either of its electrodes is), per channel for EEG. V1 is not
   /// detected on this board, so lead 3 reports nothing rather than "on".
+  ///
+  /// A computed lead is only as good as the leads it is built from, so any open
+  /// limb electrode takes all four of them down.
   static bool? _leadOff(String channelId, EEGPacketService eeg, int? ecg) {
     bool any(int mask) => (ecg! & mask) != 0;
     return switch (channelId) {
       'ecg1' when ecg != null => any(Hp6LeadOff.ra | Hp6LeadOff.la),
       'ecg2' when ecg != null => any(Hp6LeadOff.ra | Hp6LeadOff.ll),
+      'lead_iii' || 'avr' || 'avl' || 'avf' when ecg != null =>
+        any(Hp6LeadOff.ra | Hp6LeadOff.la | Hp6LeadOff.ll),
       'eeg1' when eeg.latestData != null => !eeg.isChannelConnected(0),
       'eeg2' when eeg.latestData != null => !eeg.isChannelConnected(1),
       _ => null,

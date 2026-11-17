@@ -325,6 +325,7 @@ class HpiTraceRamp {
     required this.eeg1,
     required this.eeg2,
     required this.temperature,
+    required this.derived,
   });
 
   final Color ecg1;
@@ -337,6 +338,10 @@ class HpiTraceRamp {
   final Color eeg2;
   final Color temperature;
 
+  /// Computed ECG leads (III, aVR, aVL, aVF) share one muted tone on purpose:
+  /// the colour says "derived", and their gutter says it in words too.
+  final Color derived;
+
   static const HpiTraceRamp dark = HpiTraceRamp(
     ecg1: Color(0xFFFBBF24),
     ecg2: Color(0xFFF59E0B),
@@ -347,6 +352,7 @@ class HpiTraceRamp {
     eeg1: Color(0xFF8B84F0),
     eeg2: Color(0xFFA78BFA),
     temperature: Color(0xFFFB923C),
+    derived: Color(0xFF94A3B8),
   );
 
   /// Traces darken one step in the light theme so they hold on white.
@@ -360,6 +366,7 @@ class HpiTraceRamp {
     eeg1: Color(0xFF4338CA),
     eeg2: Color(0xFF6D28D9),
     temperature: Color(0xFFC2410C),
+    derived: Color(0xFF475569),
   );
 
   HpiTraceRamp lerp(HpiTraceRamp other, double t) {
@@ -374,6 +381,7 @@ class HpiTraceRamp {
       eeg1: c(eeg1, other.eeg1),
       eeg2: c(eeg2, other.eeg2),
       temperature: c(temperature, other.temperature),
+      derived: c(derived, other.derived),
     );
   }
 
@@ -398,6 +406,11 @@ class HpiTraceRamp {
         return eeg2;
       case 'temperature':
         return temperature;
+      case 'lead_iii':
+      case 'avr':
+      case 'avl':
+      case 'avf':
+        return derived;
       default:
         return ppg;
     }
