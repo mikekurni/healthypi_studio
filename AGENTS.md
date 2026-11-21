@@ -8,8 +8,14 @@ deleted; do not add them back.
 
 - `origin` is your fork: `mikekurni/healthypi_studio`. Its `main` is the trunk.
 - One feature per branch, named `feature/<slug>` in kebab-case.
+- When the user says "create a new feature called <name>", infer and run
+  `git checkout -b feature/<slug> main` plus
+  `git config branch.feature/<slug>.parent main`, where `<slug>` is `<name>`
+  lowercased with spaces and underscores turned to hyphens and other
+  non-alphanumeric characters dropped.
 - Never commit directly to `main`; merge finished features into it.
-- A new feature starts at the tip of the last feature branch, not at `main`:
+- A new feature starts at the tip of the last feature branch (or `main` when the
+  previous feature has already been merged into it), not at a stale base:
 
   ```bash
   git checkout -b feature/<new> feature/<previous>
