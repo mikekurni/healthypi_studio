@@ -367,23 +367,34 @@ class _Canvas extends StatelessWidget {
     final p = context.hpi;
     final entries = channels.entries.toList();
 
-    return Column(
-      children: [
-        for (var i = 0; i < entries.length; i++)
-          Expanded(
-            flex: (entries[i].value.config.heightRatio * 100).round(),
-            child: _ChannelRow(
-              data: entries[i].value,
-              controller: controller,
-              windowSeconds: settings.windowSeconds,
-              thickness: settings.traceThickness,
-              gridDivisions: settings.gridDivisions,
-              color: p.trace.forChannel(entries[i].key),
-              leadOff: _leadOff(entries[i].key, eeg, ecgLeadOff),
-              last: i == entries.length - 1,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final rows = [
+          for (var i = 0; i < entries.length; i++)
+            Expanded(
+              flex: (entries[i].value.config.heightRatio * 100).round(),
+              child: _ChannelRow(
+                data: entries[i].value,
+                controller: controller,
+                windowSeconds: settings.windowSeconds,
+                thickness: settings.traceThickness,
+                gridDivisions: settings.gridDivisions,
+                color: p.trace.forChannel(entries[i].key),
+                leadOff: _leadOff(entries[i].key, eeg, ecgLeadOff),
+                last: i == entries.length - 1,
+              ),
             ),
-          ),
-      ],
+        ];
+        // A row cannot shrink past its gutter content, so a short window
+        // scrolls rather than overflowing every row at once.
+        final ratioSum = entries.fold<double>(
+            0, (sum, e) => sum + e.value.config.heightRatio);
+        final minHeight = HpiMetrics.channelRowMinHeight * ratioSum;
+        if (constraints.maxHeight >= minHeight) return Column(children: rows);
+        return SingleChildScrollView(
+          child: SizedBox(height: minHeight, child: Column(children: rows)),
+        );
+      },
     );
   }
 
@@ -537,8 +548,16 @@ class _Gutter extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 5),
-          HpiMono(LiveDataPump.channelDetail(config.id),
-              size: 9.5, color: p.textFaint),
+          // The gutter has no room for the provenance, so it waits on hover.
+          if (config.computed)
+            Tooltip(
+              message: 'Computed from Lead I and Lead II with Einthoven\'s law '
+                  'and the Goldberger relations. Not measured, so it is not '
+                  'written to recordings.',
+              child: _detail(config, p),
+            )
+          else
+            _detail(config, p),
           const Spacer(),
           Row(
             children: [
@@ -566,6 +585,14 @@ class _Gutter extends StatelessWidget {
       ),
     );
   }
+
+  Widget _detail(ChannelConfiguration config, HpiPalette p) => HpiMono(
+        LiveDataPump.channelDetail(config.id),
+        size: 9.5,
+        color: p.textFaint,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
 
   /// Tightening the range magnifies the trace, which is what a gain step means.
   void _scale(double factor) {

@@ -70,4 +70,26 @@ void main() {
           reason: 'the channel itself still buffers the computed value');
     });
   });
+
+  group('Gutter detail', () {
+    // JetBrains Mono at 9.5px advances 5.7px per character. The gutter is
+    // 118px wide with 10px of padding and a 1px border, so 97px of text room:
+    // 17 characters measure 96.9px and already ellipsize.
+    test('fits one line for every channel', () {
+      for (final config in LiveDataPump.liveChannels) {
+        expect(
+          LiveDataPump.channelDetail(config.id).length,
+          lessThanOrEqualTo(16),
+          reason: '${config.id} detail must fit the gutter on one line',
+        );
+      }
+    });
+
+    test('marks the derived leads as computed', () {
+      for (final id in ['lead_iii', 'avr', 'avl', 'avf']) {
+        expect(LiveDataPump.channelDetail(id), contains('computed'));
+      }
+      expect(LiveDataPump.channelDetail('ecg1'), isNot(contains('computed')));
+    });
+  });
 }

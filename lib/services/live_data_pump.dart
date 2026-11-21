@@ -255,7 +255,9 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
   /// screen, where filtering is off by default.
   static String channelDetail(String channelId) => switch (channelId) {
         'ecg1' || 'ecg2' || 'ecg3' => '500 Hz · µV',
-        'lead_iii' || 'avr' || 'avl' || 'avf' => '500 Hz · computed µV',
+        // Room for the rate is already spent on the word: 17 characters is
+        // 96.9px, past the gutter's 97px, so the rate moves to the tooltip.
+        'lead_iii' || 'avr' || 'avl' || 'avf' => 'computed · µV',
         'respiration' => '500 Hz · BioZ',
         'ppg' => '125 Hz · a.u.',
         'eeg1' || 'eeg2' => '250 Hz · µV',

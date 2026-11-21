@@ -71,6 +71,7 @@ class HpiMono extends StatelessWidget {
     this.weight = FontWeight.w400,
     this.align,
     this.overflow,
+    this.maxLines,
   });
 
   final String text;
@@ -80,6 +81,9 @@ class HpiMono extends StatelessWidget {
   final TextAlign? align;
   final TextOverflow? overflow;
 
+  /// Cap the lines so a long string cannot wrap and grow its row.
+  final int? maxLines;
+
   @override
   Widget build(BuildContext context) {
     final p = context.hpi;
@@ -87,6 +91,7 @@ class HpiMono extends StatelessWidget {
       text,
       textAlign: align,
       overflow: overflow,
+      maxLines: maxLines,
       style: HpiText.mono(color ?? p.textPrimary, size: size, weight: weight),
     );
   }

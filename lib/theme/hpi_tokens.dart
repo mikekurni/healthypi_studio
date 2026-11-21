@@ -67,6 +67,10 @@ class HpiMetrics {
   static const double columnGap = 14;
   static const double channelGutterWidth = 118;
   static const double channelReadoutWidth = 96;
+
+  /// Below this a channel row cannot hold its gutter content, so the canvas
+  /// scrolls instead of overflowing.
+  static const double channelRowMinHeight = 54;
   static const double toolbarHeight = 44;
 
   /// Below this width the rail drops its labels and side columns narrow.
