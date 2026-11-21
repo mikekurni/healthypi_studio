@@ -53,6 +53,8 @@ dart run tool/gen_protocol.dart       # regenerate lib/protocol/*.g.dart
 Read `docs/DEVELOPER_GUIDE.md` before touching the data pipeline, recording, or
 firmware update. Read `docs/DESIGN_SYSTEM.md` before changing styling.
 
+`graphify-out/` may hold local graphify knowledge-graph output (gitignored); rebuild with `/graphify .`.
+
 ## Coding preferences
 
 - Match surrounding style. No new abstraction, wrapper, or config unless the

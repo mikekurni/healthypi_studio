@@ -121,6 +121,9 @@ app.*.symbols
 # Scratch and intermediate working files
 scratch/
 
+# Graphify knowledge-graph output (local tool artifacts)
+graphify-out/
+
 # Editor/assistant instruction files. Internal working notes; the canonical
 # copies are kept outside this repository.
 CLAUDE.md
