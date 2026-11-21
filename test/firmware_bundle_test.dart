@@ -57,6 +57,21 @@ void main() {
           throwsA(isA<BundleException>()));
     });
 
+    test('a bundle for another product names the product it expects', () {
+      final zip = buildBundle(signer, {'m4': ('1.0.2', m4)}, mutate: (files) {
+        final s = String.fromCharCodes(files['manifest.json']!)
+            .replaceFirst('"product": "healthypi6"', '"product": "other"');
+        final raw = Uint8List.fromList(s.codeUnits);
+        files['manifest.json'] = raw;
+        files['manifest.sig'] =
+            signer.signDigest(crypto.sha256.convert(raw).bytes);
+      });
+      expect(
+          () => FirmwareBundle.open(zip, keys: [signer.key]),
+          throwsA(isA<BundleException>().having(
+              (e) => e.message, 'message', contains('PortaCardio 6'))));
+    });
+
     test('an unsigned bundle is refused', () {
       final zip = buildBundle(signer, {'m4': ('1.0.2', m4)},
           mutate: (files) => files.remove('manifest.sig'));

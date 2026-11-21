@@ -80,7 +80,7 @@ class RecordingExportService extends ChangeNotifier {
       final String sep = opts.delimiter;
 
       if (opts.includeMetadata) {
-        sink.write('# HealthyPi Studio Export$eol');
+        sink.write('# PortaStudio Export$eol');
         sink.write('# Source File: ${path.basename(inputFilePath)}$eol');
         sink.write('# Device: ${metadata.deviceId}$eol');
         sink.write('# Created: ${metadata.createdAt.toIso8601String()}$eol');
@@ -227,7 +227,7 @@ class RecordingExportService extends ChangeNotifier {
 
       try {
         // Write metadata header
-        sink.writeln('# HealthyPi Studio HRV Export');
+        sink.writeln('# PortaStudio HRV Export');
         sink.writeln('# Session: ${sessionName ?? "Unknown"}');
         sink.writeln('# Recording Start: ${recordingStart?.toIso8601String() ?? "Unknown"}');
         sink.writeln('# Export Time: ${DateTime.now().toIso8601String()}');

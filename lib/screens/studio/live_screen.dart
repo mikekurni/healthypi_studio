@@ -367,34 +367,50 @@ class _Canvas extends StatelessWidget {
     final p = context.hpi;
     final entries = channels.entries.toList();
 
-    return Column(
-      children: [
-        for (var i = 0; i < entries.length; i++)
-          Expanded(
-            flex: (entries[i].value.config.heightRatio * 100).round(),
-            child: _ChannelRow(
-              data: entries[i].value,
-              controller: controller,
-              windowSeconds: settings.windowSeconds,
-              thickness: settings.traceThickness,
-              gridDivisions: settings.gridDivisions,
-              color: p.trace.forChannel(entries[i].key),
-              leadOff: _leadOff(entries[i].key, eeg, ecgLeadOff),
-              last: i == entries.length - 1,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final rows = [
+          for (var i = 0; i < entries.length; i++)
+            Expanded(
+              flex: (entries[i].value.config.heightRatio * 100).round(),
+              child: _ChannelRow(
+                data: entries[i].value,
+                controller: controller,
+                windowSeconds: settings.windowSeconds,
+                thickness: settings.traceThickness,
+                gridDivisions: settings.gridDivisions,
+                color: p.trace.forChannel(entries[i].key),
+                leadOff: _leadOff(entries[i].key, eeg, ecgLeadOff),
+                last: i == entries.length - 1,
+              ),
             ),
-          ),
-      ],
+        ];
+        // A row cannot shrink past its gutter content, so a short window
+        // scrolls rather than overflowing every row at once.
+        final ratioSum = entries.fold<double>(
+            0, (sum, e) => sum + e.value.config.heightRatio);
+        final minHeight = HpiMetrics.channelRowMinHeight * ratioSum;
+        if (constraints.maxHeight >= minHeight) return Column(children: rows);
+        return SingleChildScrollView(
+          child: SizedBox(height: minHeight, child: Column(children: rows)),
+        );
+      },
     );
   }
 
   /// Lead-off as the device reports it: per electrode for ECG (a lead is off
   /// when either of its electrodes is), per channel for EEG. V1 is not
   /// detected on this board, so lead 3 reports nothing rather than "on".
+  ///
+  /// A computed lead is only as good as the leads it is built from, so any open
+  /// limb electrode takes all four of them down.
   static bool? _leadOff(String channelId, EEGPacketService eeg, int? ecg) {
     bool any(int mask) => (ecg! & mask) != 0;
     return switch (channelId) {
       'ecg1' when ecg != null => any(Hp6LeadOff.ra | Hp6LeadOff.la),
       'ecg2' when ecg != null => any(Hp6LeadOff.ra | Hp6LeadOff.ll),
+      'lead_iii' || 'avr' || 'avl' || 'avf' when ecg != null =>
+        any(Hp6LeadOff.ra | Hp6LeadOff.la | Hp6LeadOff.ll),
       'eeg1' when eeg.latestData != null => !eeg.isChannelConnected(0),
       'eeg2' when eeg.latestData != null => !eeg.isChannelConnected(1),
       _ => null,
@@ -532,8 +548,16 @@ class _Gutter extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 5),
-          HpiMono(LiveDataPump.channelDetail(config.id),
-              size: 9.5, color: p.textFaint),
+          // The gutter has no room for the provenance, so it waits on hover.
+          if (config.computed)
+            Tooltip(
+              message: 'Computed from Lead I and Lead II with Einthoven\'s law '
+                  'and the Goldberger relations. Not measured, so it is not '
+                  'written to recordings.',
+              child: _detail(config, p),
+            )
+          else
+            _detail(config, p),
           const Spacer(),
           Row(
             children: [
@@ -561,6 +585,14 @@ class _Gutter extends StatelessWidget {
       ),
     );
   }
+
+  Widget _detail(ChannelConfiguration config, HpiPalette p) => HpiMono(
+        LiveDataPump.channelDetail(config.id),
+        size: 9.5,
+        color: p.textFaint,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      );
 
   /// Tightening the range magnifies the trace, which is what a gain step means.
   void _scale(double factor) {
@@ -693,12 +725,34 @@ class _FocusLayout extends StatelessWidget {
 }
 
 /// The vitals HUD — the same numbers as the strip, floated over the canvas.
-class _VitalsHud extends StatelessWidget {
+///
+/// Collapsible: the panel sits on top of the first trace, so it folds down to a
+/// chevron when the user wants the waveform unobstructed. State is local, so
+/// leaving focus mode and coming back starts expanded again.
+class _VitalsHud extends StatefulWidget {
   const _VitalsHud();
+
+  @override
+  State<_VitalsHud> createState() => _VitalsHudState();
+}
+
+class _VitalsHudState extends State<_VitalsHud> {
+  bool _collapsed = false;
 
   @override
   Widget build(BuildContext context) {
     final p = context.hpi;
+    if (_collapsed) {
+      return _HudPanel(
+        padding: const EdgeInsets.all(8),
+        child: _HudChevron(
+          icon: Icons.expand_more,
+          tooltip: 'Show vitals',
+          onTap: () => setState(() => _collapsed = false),
+        ),
+      );
+    }
+
     final pump = context.watch<LiveDataPump>();
     final parser = context.watch<DataParser>();
     final hrv = context.watch<HRVPacketService>();
@@ -779,7 +833,50 @@ class _VitalsHud extends StatelessWidget {
               ],
             ),
           ],
+          const SizedBox(width: 16),
+          Container(width: 1, height: 24, color: p.hudOutline),
+          const SizedBox(width: 8),
+          _HudChevron(
+            icon: Icons.expand_less,
+            tooltip: 'Hide vitals',
+            onTap: () => setState(() => _collapsed = true),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+/// The HUD's fold control: one icon, no chrome of its own.
+class _HudChevron extends StatelessWidget {
+  const _HudChevron({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.hpi;
+    return Semantics(
+      button: true,
+      label: tooltip,
+      child: Tooltip(
+        message: tooltip,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(5),
+              child: Icon(icon, size: 18, color: p.textMuted),
+            ),
+          ),
+        ),
       ),
     );
   }

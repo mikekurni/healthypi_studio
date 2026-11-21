@@ -122,6 +122,10 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
 
   /// The channel set the design shows on Live, in display order, using the
   /// semantic trace ramp rather than saturated primaries.
+  ///
+  /// Respiration, PPG and EEG start hidden: what a clinician opens first is the
+  /// limb leads. Hidden channels keep streaming and keep being recorded, and the
+  /// Channels inspector brings them back.
   static List<ChannelConfiguration> get liveChannels => [
         ChannelConfiguration(
           id: 'ecg1',
@@ -142,6 +146,46 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           lineWidth: 1.6,
         ),
         ChannelConfiguration(
+          id: 'lead_iii',
+          label: 'Lead III',
+          unit: 'mV',
+          color: HpiTraceRamp.dark.leadIii,
+          minValue: -500,
+          maxValue: 500,
+          lineWidth: 1.6,
+          computed: true,
+        ),
+        ChannelConfiguration(
+          id: 'avr',
+          label: 'aVR',
+          unit: 'mV',
+          color: HpiTraceRamp.dark.avr,
+          minValue: -500,
+          maxValue: 500,
+          lineWidth: 1.6,
+          computed: true,
+        ),
+        ChannelConfiguration(
+          id: 'avl',
+          label: 'aVL',
+          unit: 'mV',
+          color: HpiTraceRamp.dark.avl,
+          minValue: -500,
+          maxValue: 500,
+          lineWidth: 1.6,
+          computed: true,
+        ),
+        ChannelConfiguration(
+          id: 'avf',
+          label: 'aVF',
+          unit: 'mV',
+          color: HpiTraceRamp.dark.avf,
+          minValue: -500,
+          maxValue: 500,
+          lineWidth: 1.6,
+          computed: true,
+        ),
+        ChannelConfiguration(
           id: 'ecg3',
           label: 'V1',
           unit: 'mV',
@@ -158,6 +202,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           minValue: -500,
           maxValue: 500,
           lineWidth: 1.8,
+          isVisible: false,
         ),
         ChannelConfiguration(
           id: 'ppg',
@@ -166,6 +211,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           color: HpiTraceRamp.dark.ppg,
           lineWidth: 1.8,
           autoScale: true,
+          isVisible: false,
         ),
         ChannelConfiguration(
           id: 'eeg1',
@@ -177,6 +223,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           lineWidth: 1.2,
           autoScale: true,
           heightRatio: 0.8,
+          isVisible: false,
         ),
         ChannelConfiguration(
           id: 'eeg2',
@@ -188,8 +235,19 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           lineWidth: 1.2,
           autoScale: true,
           heightRatio: 0.8,
+          isVisible: false,
         ),
       ];
+
+  /// Einthoven's law and the Goldberger augmented leads, derived from the two
+  /// limb leads the board measures. The third measured channel is V1, so Lead
+  /// III has to be computed, never assumed to be on the wire.
+  static Map<String, double> derivedLeads(double leadI, double leadII) => {
+        'lead_iii': leadII - leadI,
+        'avr': -(leadI + leadII) / 2,
+        'avl': leadI - leadII / 2,
+        'avf': leadII - leadI / 2,
+      };
 
   /// The per-channel detail line shown in the gutter: the channel's rate and
   /// unit, which are facts. It used to assert filter corners ('40 Hz LP') that
@@ -197,6 +255,9 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
   /// screen, where filtering is off by default.
   static String channelDetail(String channelId) => switch (channelId) {
         'ecg1' || 'ecg2' || 'ecg3' => '500 Hz · µV',
+        // Room for the rate is already spent on the word: 17 characters is
+        // 96.9px, past the gutter's 97px, so the rate moves to the tooltip.
+        'lead_iii' || 'avr' || 'avl' || 'avf' => 'computed · µV',
         'respiration' => '500 Hz · BioZ',
         'ppg' => '125 Hz · a.u.',
         'eeg1' || 'eeg2' => '250 Hz · µV',
@@ -278,6 +339,11 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
           'respiration': packet.respiration.toDouble(),
         };
 
+        // PPG is decimated to 125 Hz for display.
+        if (_packetIndex % 4 == 0) {
+          values['ppg'] = packet.ppgRed.toDouble() / 100.0;
+        }
+
         // EEG arrives at 250 Hz against a 500 Hz waveform clock.
         if (_packetIndex.isEven && eegIndex < eegPackets.length) {
           final eeg = eegPackets[eegIndex++];
@@ -286,12 +352,13 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
             values['eeg2'] = eeg.channels[1].toDouble();
           }
         }
-
-        // PPG is decimated to 125 Hz for display.
-        if (_packetIndex % 4 == 0) {
-          values['ppg'] = packet.ppgRed.toDouble() / 100.0;
-        }
         _packetIndex++;
+
+        final leadI = values['ecg1'];
+        final leadII = values['ecg2'];
+        if (leadI != null && leadII != null) {
+          values.addAll(derivedLeads(leadI, leadII));
+        }
 
         _controller.addDataPointsSync(values);
         // Feed the diagnostics counters that Link health reads. Without this the
@@ -397,6 +464,12 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
       values['ppg'] = 100.0 * math.exp(-math.pow((cycle - 0.18) * 12, 2)) +
           35.0 * math.exp(-math.pow((cycle - 0.45) * 10, 2)) +
           noise();
+    }
+
+    final leadI = values['ecg1'];
+    final leadII = values['ecg2'];
+    if (leadI != null && leadII != null) {
+      values.addAll(derivedLeads(leadI, leadII));
     }
     return values;
   }

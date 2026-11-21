@@ -67,6 +67,10 @@ class HpiMetrics {
   static const double columnGap = 14;
   static const double channelGutterWidth = 118;
   static const double channelReadoutWidth = 96;
+
+  /// Below this a channel row cannot hold its gutter content, so the canvas
+  /// scrolls instead of overflowing.
+  static const double channelRowMinHeight = 54;
   static const double toolbarHeight = 44;
 
   /// Below this width the rail drops its labels and side columns narrow.
@@ -312,12 +316,16 @@ class HpiPalette extends ThemeExtension<HpiPalette> {
 }
 
 /// The semantic trace ramp. ECG leads share the amber family on purpose so the
-/// three leads read as one modality.
+/// seven leads read as one modality, ordered light to dark from Lead I to V1.
 @immutable
 class HpiTraceRamp {
   const HpiTraceRamp({
     required this.ecg1,
     required this.ecg2,
+    required this.leadIii,
+    required this.avr,
+    required this.avl,
+    required this.avf,
     required this.ecg3,
     required this.respiration,
     required this.ppg,
@@ -329,6 +337,10 @@ class HpiTraceRamp {
 
   final Color ecg1;
   final Color ecg2;
+  final Color leadIii;
+  final Color avr;
+  final Color avl;
+  final Color avf;
   final Color ecg3;
   final Color respiration;
   final Color ppg;
@@ -340,7 +352,11 @@ class HpiTraceRamp {
   static const HpiTraceRamp dark = HpiTraceRamp(
     ecg1: Color(0xFFFBBF24),
     ecg2: Color(0xFFF59E0B),
-    ecg3: Color(0xFFD97706),
+    leadIii: Color(0xFFE88F0B),
+    avr: Color(0xFFDB800A),
+    avl: Color(0xFFCE710A),
+    avf: Color(0xFFC16209),
+    ecg3: Color(0xFFB45309),
     respiration: Color(0xFF4CC38A),
     ppg: Color(0xFF6FB3CC),
     ppgIr: Color(0xFF4E8FA8),
@@ -353,7 +369,11 @@ class HpiTraceRamp {
   static const HpiTraceRamp light = HpiTraceRamp(
     ecg1: Color(0xFFB45309),
     ecg2: Color(0xFF92400E),
-    ecg3: Color(0xFF7C2D12),
+    leadIii: Color(0xFF873C0D),
+    avr: Color(0xFF7C370D),
+    avl: Color(0xFF72330C),
+    avf: Color(0xFF672E0C),
+    ecg3: Color(0xFF5C2A0B),
     respiration: Color(0xFF15803D),
     ppg: Color(0xFF2C6E84),
     ppgIr: Color(0xFF1F5566),
@@ -367,6 +387,10 @@ class HpiTraceRamp {
     return HpiTraceRamp(
       ecg1: c(ecg1, other.ecg1),
       ecg2: c(ecg2, other.ecg2),
+      leadIii: c(leadIii, other.leadIii),
+      avr: c(avr, other.avr),
+      avl: c(avl, other.avl),
+      avf: c(avf, other.avf),
       ecg3: c(ecg3, other.ecg3),
       respiration: c(respiration, other.respiration),
       ppg: c(ppg, other.ppg),
@@ -384,6 +408,14 @@ class HpiTraceRamp {
         return ecg1;
       case 'ecg2':
         return ecg2;
+      case 'lead_iii':
+        return leadIii;
+      case 'avr':
+        return avr;
+      case 'avl':
+        return avl;
+      case 'avf':
+        return avf;
       case 'ecg3':
         return ecg3;
       case 'respiration':

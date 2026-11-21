@@ -57,7 +57,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     return [
       StatusItem('Preferences apply immediately',
           icon: Icons.check_circle, tone: p.success),
-      const StatusItem('Studio 1.0.0'),
+      const StatusItem('PortaStudio'),
       StatusItem(parser.protocolVersionString),
     ];
   }
@@ -67,7 +67,7 @@ class SettingsScreenState extends State<SettingsScreen> {
     return ScreenBody(
       header: const ScreenHeader(
         title: 'Settings',
-        subtitle: 'Studio 1.0.0 · preferences apply immediately '
+        subtitle: 'PortaStudio · preferences apply immediately '
             '(not persisted between launches yet)',
       ),
       child: Row(
@@ -571,7 +571,7 @@ class _AboutCardState extends State<_AboutCard> {
                     const HpiWordmark(height: 16),
                     const SizedBox(height: 6),
                     HpiMono(
-                      _version == null ? 'Studio' : 'Studio $_version',
+                      _version == null ? 'PortaStudio' : 'PortaStudio $_version',
                       size: 11,
                       color: p.textMuted,
                     ),
