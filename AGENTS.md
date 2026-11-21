@@ -6,14 +6,36 @@ deleted; do not add them back.
 
 ## Git workflow
 
-- Work on a `feature/...` branch. Never commit directly to `main`.
-- `origin` is the personal fork: `mikekurni/healthypi_studio`.
-- `upstream` is `Protocentral/healthypi_studio`. Use it to sync:
-  `git fetch upstream && git rebase upstream/main`.
-- Commits must be clean, modular, and ready for an upstream PR. One concern per
-  commit, descriptive sentence-case subject (see `git log`), no WIP or fixup
-  commits left behind.
+- `origin` is your fork: `mikekurni/healthypi_studio`. Its `main` is the trunk.
+- One feature per branch, named `feature/<slug>` in kebab-case.
+- Never commit directly to `main`; merge finished features into it.
+- A new feature starts at the tip of the last feature branch, not at `main`:
+
+  ```bash
+  git checkout -b feature/<new> feature/<previous>
+  git config branch.feature/<new>.parent feature/<previous>
+  ```
+
+- Finish a feature by merging it into `main` and pushing:
+
+  ```bash
+  git checkout main && git merge --no-ff feature/<slug> && git push origin main
+  ```
+
+- After a merge, rebase anything stacked above it:
+
+  ```bash
+  git rebase --onto main feature/<merged> feature/<next>
+  ```
+
+- Never merge `main` into a feature branch; rebase instead.
+- Before merging, `flutter analyze --no-fatal-infos` must report zero errors and
+  warnings and `flutter test` must pass.
+- `upstream` is `Protocentral/healthypi_studio`, read-only. Sync the trunk
+  occasionally with `git fetch upstream && git rebase upstream/main main`.
 - Check `git branch --show-current` and `git status` before committing.
+- Commits are single-concern, sentence-case subject (see `git log`), no WIP or
+  fixup commits left behind.
 
 ## Build and checks
 
