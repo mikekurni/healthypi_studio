@@ -369,10 +369,25 @@ class _Canvas extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+        final available = constraints.maxHeight;
+        final ratioSum = entries.fold<double>(
+            0, (sum, e) => sum + e.value.config.heightRatio);
+        // Each row keeps a readable height: it grows up to a cap when few
+        // channels are shown, and never shrinks below its gutter content when
+        // many are shown (the canvas then scrolls instead of clipping).
+        final rowHeights = <double>[];
+        for (final e in entries) {
+          final ratio = e.value.config.heightRatio;
+          final ideal = available * ratio / ratioSum;
+          final minH = e.value.config.computed ? 46.0 : 54.0;
+          final maxH = 120.0 * ratio;
+          rowHeights.add(ideal.clamp(minH, maxH));
+        }
+        final total = rowHeights.fold<double>(0, (s, h) => s + h);
         final rows = [
           for (var i = 0; i < entries.length; i++)
-            Expanded(
-              flex: (entries[i].value.config.heightRatio * 100).round(),
+            SizedBox(
+              height: rowHeights[i],
               child: _ChannelRow(
                 data: entries[i].value,
                 controller: controller,
@@ -385,15 +400,11 @@ class _Canvas extends StatelessWidget {
               ),
             ),
         ];
-        // A row cannot shrink past its gutter content, so a short window
-        // scrolls rather than overflowing every row at once.
-        final ratioSum = entries.fold<double>(
-            0, (sum, e) => sum + e.value.config.heightRatio);
-        final minHeight = HpiMetrics.channelRowMinHeight * ratioSum;
-        if (constraints.maxHeight >= minHeight) return Column(children: rows);
-        return SingleChildScrollView(
-          child: SizedBox(height: minHeight, child: Column(children: rows)),
-        );
+        final column = Column(mainAxisSize: MainAxisSize.min, children: rows);
+        if (total > available + 0.5) {
+          return SingleChildScrollView(child: column);
+        }
+        return Center(child: column);
       },
     );
   }
@@ -558,29 +569,31 @@ class _Gutter extends StatelessWidget {
             )
           else
             _detail(config, p),
-          const Spacer(),
-          Row(
-            children: [
-              _Step(
-                icon: Icons.remove,
-                onTap: autoScale ? null : () => _scale(1.25),
-              ),
-              const SizedBox(width: 4),
-              Expanded(
-                child: HpiMono(
-                  autoScale ? 'auto' : _gainLabel(config),
-                  size: 9.5,
-                  color: p.textSecondary,
-                  align: TextAlign.center,
+          if (!config.computed) ...[
+            const Spacer(),
+            Row(
+              children: [
+                _Step(
+                  icon: Icons.remove,
+                  onTap: autoScale ? null : () => _scale(1.25),
                 ),
-              ),
-              const SizedBox(width: 4),
-              _Step(
-                icon: Icons.add,
-                onTap: autoScale ? null : () => _scale(0.8),
-              ),
-            ],
-          ),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: HpiMono(
+                    autoScale ? 'auto' : _gainLabel(config),
+                    size: 9.5,
+                    color: p.textSecondary,
+                    align: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                _Step(
+                  icon: Icons.add,
+                  onTap: autoScale ? null : () => _scale(0.8),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
