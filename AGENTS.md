@@ -81,7 +81,10 @@ dart run tool/gen_protocol.dart       # regenerate lib/protocol/*.g.dart
 Read `docs/DEVELOPER_GUIDE.md` before touching the data pipeline, recording, or
 firmware update. Read `docs/DESIGN_SYSTEM.md` before changing styling.
 
-`graphify-out/` may hold local graphify knowledge-graph output (gitignored); rebuild with `/graphify .`.
+`graphify-out/` may hold local graphify knowledge-graph output (gitignored); rebuild with
+`/graphify .`. This repo is also part of a cross-repo graph at
+`~/Projects/hpi6/graphify-out/` that spans `healthypi_studio` and `healthypi_fw`.
+After changing either repo, rebuild the parent graph (see `~/Projects/hpi6/AGENTS.md`).
 
 ## Coding preferences
 
