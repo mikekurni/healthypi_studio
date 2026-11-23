@@ -70,7 +70,7 @@ class RecordingFileService extends ChangeNotifier {
   /// Get the recordings directory path
   Future<Directory> getRecordingsDirectory() async {
     final directory = await getApplicationDocumentsDirectory();
-    return Directory(path.join(directory.path, 'HealthyPi_Recordings'));
+    return Directory(path.join(directory.path, 'PortaCardio_Recordings'));
   }
 
   /// Load all recording files

@@ -105,7 +105,7 @@ Commit the snapshots and the generated files together. CI regenerates and fails 
 - **Config:** `RecordingConfig(channels: List<ChannelInfo>, sessionName, subjectMetadata?, sessionMetadata?, enablePreBuffer, preBufferDuration, autoSaveInterval)`. `ChannelInfo(id, name, unit, samplingRate, gainFactor, minValue, maxValue)`.
 - **File format:** header + repeated 64 KB blocks (`DATA`/`EVNT`/`INDX` markers, per-block CRC), index for seek, footer. `BiosignalFileWriter.finalize()` **must** be called or the file corrupts. Reader: `open/readHeader/readSamples/readEvents/close`.
 - **Extension:** current code writes **`.hpd`** (older RECORDING_ENGINE_GUIDE/QUICK_START said `.biosig` — stale).
-- **Storage:** `~/Documents/HealthyPi_Recordings/`, exports `~/Documents/HealthyPi_Exports/`. (The onboarding quickstart's `~/.healthypi_studio/Sessions/` path referred to the unwired session subsystem — see §8.)
+- **Storage:** `~/Documents/PortaCardio_Recordings/`, exports `~/Documents/PortaCardio_Exports/`. (The onboarding quickstart's `~/.healthypi_studio/Sessions/` path referred to the unwired session subsystem — see §8.)
 - **Export:** CSV via `RecordingExportService.exportToCSV`, which streams the `.hpd` through `BiosignalFileReader.readSamples()` and writes one row per sample, honouring delimiter, precision, timestamps, time range, downsampling and markers. CSV is the only export format; EDF+/HDF5/MATLAB were removed before v1.0 rather than shipped as disabled promises. Filtered export does not exist — exports are always the raw recorded signal.
 - **`.hpd` round trip, fixed 2026-08-30.** The writer and reader had never been tested against each other and disagreed three ways: block markers (`DATA`/`EVNT`/`INDX`) were written 16 bits wide and compared 32, so `readSamples()` matched nothing and every recording read back **empty**; subject metadata was read in a different field order than written; and strings were stored UTF-8 but decoded with `String.fromCharCodes`, mangling `Ω` and `°C`. Files written before that fix are not readable.
 - 21 recording tests in [test/recording_test.dart](../test/recording_test.dart), 7 file round-trip tests in [test/biosignal_file_test.dart](../test/biosignal_file_test.dart), 6 export tests in [test/csv_export_test.dart](../test/csv_export_test.dart). `exportToCSV` takes an `outputDirectory` override so tests need no `path_provider` channel.
@@ -188,7 +188,7 @@ implementation, not a wiring job.
 1. `flutter pub get`; run desktop: `flutter run -d macos` (or `windows`/`linux`).
 2. Connect HealthyPi 6 over USB. Studio logs `USB Serial Service initialized with flutter_libserialport`, then RX bytes.
 3. Verify streaming: `packetsReceived` climbs, drop rate < 1%, waveforms move.
-4. Record: Record button → stop → file in `~/Documents/HealthyPi_Recordings/` → export CSV from Recordings & Export.
+4. Record: Record button → stop → file in `~/Documents/PortaCardio_Recordings/` → export CSV from Recordings & Export.
 5. OTA: control panel → Update Firmware → pick `.bin` → USB or WiFi.
 
 Platform notes: macOS needs location permission for serial; Linux user must be in `dialout`; Windows needs the USB-CDC driver. Ports: macOS `/dev/cu.*`, Linux `/dev/ttyACM*`, Windows `COM*`.

@@ -477,7 +477,7 @@ class _StorageCard extends StatelessWidget {
           const SizedBox(height: 6),
           HpiSettingRow(
             title: 'Recording folder',
-            description: '~/Documents/HealthyPi_Recordings · '
+            description: '~/Documents/PortaCardio_Recordings · '
                 '${files.totalRecordings} files, '
                 '${formatBytes(files.totalSizeBytes)}',
             control: HpiGhostButton(

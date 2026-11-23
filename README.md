@@ -142,8 +142,8 @@ CRC, counting each as a dropped packet. Rates: ECG and respiration 500 Hz, PPG
 Recordings are `.hpd`: block-based and append-only, sharing the DBLK block model with
 the live stream and compatible with
 [OpenView 3](https://github.com/Protocentral/protocentral_openview). They land in
-`HealthyPi_Recordings/` under the platform documents directory — on macOS, inside the
-sandbox container — with exports beside them in `HealthyPi_Exports/`. Both formats,
+`PortaCardio_Recordings/` under the platform documents directory — on macOS, inside the
+sandbox container — with exports beside them in `PortaCardio_Exports/`. Both formats,
 the MCUmgr SMP surface and the USB dual-CDC topology are specified in
 [`docs/PROTOCOL_REFERENCE.md`](docs/PROTOCOL_REFERENCE.md).
 

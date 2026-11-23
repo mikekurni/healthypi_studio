@@ -24,7 +24,7 @@ class RecordingExportService extends ChangeNotifier {
   /// Streams the `.hpd` a block at a time through `BiosignalFileReader` rather
   /// than loading it: an hour of seven channels at 500 Hz is millions of rows,
   /// and the writer is sequential anyway.
-  /// [outputDirectory] overrides the default `HealthyPi_Exports` folder. The
+  /// [outputDirectory] overrides the default `PortaCardio_Exports` folder. The
   /// app never passes it; tests do, because `path_provider` needs a platform
   /// channel that a unit test does not have.
   Future<String?> exportToCSV({
@@ -69,7 +69,7 @@ class RecordingExportService extends ChangeNotifier {
 
       final exportDir = outputDirectory ??
           Directory(path.join((await getApplicationDocumentsDirectory()).path,
-              'HealthyPi_Exports'));
+              'PortaCardio_Exports'));
       if (!await exportDir.exists()) {
         await exportDir.create(recursive: true);
       }
@@ -268,7 +268,7 @@ class RecordingExportService extends ChangeNotifier {
     try {
       // Get output directory
       final directory = await getApplicationDocumentsDirectory();
-      final exportDir = Directory(path.join(directory.path, 'HealthyPi_Exports'));
+      final exportDir = Directory(path.join(directory.path, 'PortaCardio_Exports'));
       if (!await exportDir.exists()) {
         await exportDir.create(recursive: true);
       }
@@ -375,7 +375,7 @@ class RecordingExportService extends ChangeNotifier {
   /// Get the exports directory
   Future<Directory> getExportsDirectory() async {
     final directory = await getApplicationDocumentsDirectory();
-    final exportDir = Directory(path.join(directory.path, 'HealthyPi_Exports'));
+    final exportDir = Directory(path.join(directory.path, 'PortaCardio_Exports'));
     if (!await exportDir.exists()) {
       await exportDir.create(recursive: true);
     }

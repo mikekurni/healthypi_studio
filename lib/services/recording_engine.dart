@@ -370,7 +370,7 @@ class RecordingEngine extends ChangeNotifier {
   /// Generate full file path for recording
   Future<String> _generateFilePath() async {
     final directory = await getApplicationDocumentsDirectory();
-    final recordingsDir = Directory(path.join(directory.path, 'HealthyPi_Recordings'));
+    final recordingsDir = Directory(path.join(directory.path, 'PortaCardio_Recordings'));
 
     if (!await recordingsDir.exists()) {
       await recordingsDir.create(recursive: true);

@@ -160,7 +160,7 @@ class RecordingsScreenState extends State<RecordingsScreen> {
       return ScreenEmptyState(
         icon: Icons.folder_off_outlined,
         title: 'No recordings yet',
-        message: 'Recordings land in ~/Documents/HealthyPi_Recordings. Start one '
+        message: 'Recordings land in ~/Documents/PortaCardio_Recordings. Start one '
             'from the Live screen and it will appear here when you stop.',
         action: HpiGhostButton(
           label: 'Rescan folder',
