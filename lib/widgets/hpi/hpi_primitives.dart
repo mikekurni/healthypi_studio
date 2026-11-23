@@ -843,15 +843,19 @@ class HpiKeyValue extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.hpi;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
+        Flexible(
+          fit: FlexFit.loose,
           child: Text(
             label,
             style: HpiText.body(p).copyWith(color: p.textMuted, height: 1.2),
           ),
         ),
         const SizedBox(width: 8),
-        HpiMono(value, size: 12, color: valueColor ?? p.textPrimary),
+        Expanded(
+          child: HpiMono(value, size: 12, color: valueColor ?? p.textPrimary),
+        ),
       ],
     );
   }
