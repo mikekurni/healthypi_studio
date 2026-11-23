@@ -1,6 +1,6 @@
 # HealthyPi Studio — Protocol Reference
 
-**Status:** Canonical · **Last verified against code:** 2026-07-23
+**Status:** Canonical · **Last verified against code:** 2026-11-23 (app/firmware protocol audit)
 **Supersedes:** OPENVIEW_PROTOCOL.md, OPENVIEW_HRV_PACKET_SPEC.md, OPENVIEW_EEG_PACKET_SPEC.md, and the protocol sections of DEVICE_DATA_FLOW_CHECKLIST.md / DEVICE_INTEGRATION_QUICKSTART.md / ESP32_C6_WIFI_SERVER.md / STUDIO_INTEGRATION_NOTES.md.
 
 This document is the single source of truth for the HealthyPi 6 wire formats that Studio parses and produces. Where the older docs disagreed, the values here were confirmed by reading the shipping parser ([lib/services/data_parser.dart](../lib/services/data_parser.dart)) and SMP client ([lib/services/smp_serial_client.dart](../lib/services/smp_serial_client.dart)).
@@ -46,6 +46,21 @@ Header is 28 bytes; CRC trailer is 4 bytes. Parser resyncs on bad magic, out-of-
 
 ### 1.2 Channel sample structs
 
+Channel IDs are shared with `Hp6Channel` in `lib/protocol/hp6_formats.g.dart`.
+Channels 3, 6, 7, 8 carry no regular samples: resp is folded into the ECG
+sample, and event/sync/infer are event-rate or sidecar blocks.
+
+| ID | Channel | Size | Rate | Notes |
+|---|---|---|---|---|
+| 1 | ECG | 20 B | 500 Hz | Lead I/II/V1 + respiration |
+| 2 | PPG | 12 B | 250 Hz (configurable 62–2000) | raw ADC counts |
+| 3 | RESP | — | — | carried inside the ECG sample |
+| 4 | VITALS | 16 B | ~1 Hz | see table below |
+| 5 | EEG | 36 B | 250 Hz | expansion module only |
+| 6 | EVENT | 8 B | event-rate | user marks; see §1 (event struct) |
+| 7 | SYNC | 40 B | every 5 s, files only | see §6 |
+| 8 | INFER | 16 B | per classified beat | see §1 (infer struct) |
+
 **Channel 1 — ECG @ 500 Hz — 20 bytes/sample**
 
 | Off | Size | Field |
@@ -67,7 +82,7 @@ Header is 28 bytes; CRC trailer is 4 bytes. Parser resyncs on bad magic, out-of-
 | 8 | 1 | `lead_off` |
 | 9 | 3 | padding |
 
-**Channel 4 — VITALS (on change) — 12 bytes**
+**Channel 4 — VITALS (on change) — 16 bytes**
 
 | Off | Size | Field | Units |
 |---|---|---|---|
@@ -75,9 +90,25 @@ Header is 28 bytes; CRC trailer is 4 bytes. Parser resyncs on bad magic, out-of-
 | 2 | 2 | `spo2x10` (uint16) | % ×10 |
 | 4 | 2 | `rr` (uint16) | breaths/min |
 | 6 | 2 | `temp` (int16) | °C ×100 |
-| 8 | 1 | `sdnn` (uint8) | ms |
-| 9 | 1 | `rmssd` (uint8) | ms |
-| 10 | 2 | padding | — |
+| 8 | 2 | `sdnn` (uint16) | ms |
+| 10 | 2 | `rmssd` (uint16) | ms |
+| 12 | 2 | `lf_hf_x10` (uint16) | LF/HF ×10 (0 = not computed) |
+| 14 | 1 | `flags` (uint8) | see table below |
+| 15 | 1 | padding | — |
+
+`flags` bits (must match `Hp6VitalsFlag` in `lib/protocol/hp6_formats.g.dart`):
+
+| Bit | Name | Meaning |
+|---|---|---|
+| 0 | `hrFromPpg` | `hr` is a PPG pulse rate, not an ECG heart rate |
+| 1 | `ecgLeadOff` | an ECG electrode is off; ECG-derived rates are suppressed |
+| 2 | `ppgWeak` | PPG perfusion low; `spo2` and PPG-sourced `hr` are provisional |
+| 3 | `motion` | BMI323 saw motion (qualifies the sample; rates still filled) |
+
+Zero in `rr`, `temp`, `sdnn`, `rmssd`, `lf_hf_x10` means "not available", never
+a measured zero. `flags` is 0 on firmware older than 1.1.0, which is
+indistinguishable from "ECG, leads on" — check the firmware version before
+drawing conclusions from a zero flags field.
 
 **Channel 5 — EEG — reserved.** Not streamed by the device yet; blocks are ignored ([data_parser.dart:1018](../lib/services/data_parser.dart#L1018)). See §4 for the proposed EEG spec if/when it ships.
 
