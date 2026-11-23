@@ -202,6 +202,9 @@ class RecordingEngine extends ChangeNotifier {
 
       // Finalize and close file
       if (_fileWriter != null) {
+        for (final event in _events) {
+          await _fileWriter!.writeEvent(event);
+        }
         await _fileWriter!.finalize(
           recordingDuration: elapsedTime,
           totalSamples: _samplesRecorded,
