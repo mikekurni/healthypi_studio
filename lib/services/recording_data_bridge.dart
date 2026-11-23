@@ -118,7 +118,11 @@ class RecordingDataBridge extends ChangeNotifier {
       final values = _sampleQueue.removeFirst();
       samples.add(MultiChannelSample(
         sequenceNumber: _totalSamplesForwarded + samples.length,
-        timestampMicros: now.microsecondsSinceEpoch,
+        // Relative to the recording start, like addSample already does, so the
+        // reader and the CSV exporter can turn them back into wall-clock time.
+        timestampMicros: _recordingStartTime == null
+            ? 0
+            : now.difference(_recordingStartTime!).inMicroseconds,
         values: values,
       ));
     }

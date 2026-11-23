@@ -114,7 +114,15 @@ class RecordingExportService extends ChangeNotifier {
             (read - 1) % opts.downsampleFactor != 0) {
           continue;
         }
-        final Duration t = Duration(microseconds: sample.timestampMicros);
+        // Samples may carry either recording-relative microseconds (files
+        // written after the bridge was fixed) or absolute wall-clock ones
+        // (older files). Normalise to relative so the range filter and the
+        // timestamp column both work either way.
+        final int baseMicros = start.microsecondsSinceEpoch;
+        final int relativeMicros = sample.timestampMicros >= baseMicros
+            ? sample.timestampMicros - baseMicros
+            : sample.timestampMicros;
+        final Duration t = Duration(microseconds: relativeMicros);
         if (t < opts.timeRange.startTime) continue;
         // Rows arrive in time order, so the first sample past the end is the
         // end of the export, not a row to skip.
@@ -123,10 +131,10 @@ class RecordingExportService extends ChangeNotifier {
         final row = <String>[
           if (opts.includeTimestamps)
             opts.useRelativeTime
-                ? (sample.timestampMicros / 1e6)
+                ? (relativeMicros / 1e6)
                     .toStringAsFixed(opts.decimalPrecision)
                 : start
-                    .add(Duration(microseconds: sample.timestampMicros))
+                    .add(Duration(microseconds: relativeMicros))
                     .toIso8601String(),
           // NaN marks a sample the channel did not carry; write it as an empty
           // cell rather than the text "NaN".
