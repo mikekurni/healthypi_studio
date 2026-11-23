@@ -281,6 +281,17 @@ void main() {
       expect(metadata.totalSamples, 1);
       expect(metadata.subjectMetadata?.subjectId, 'S001');
     });
+
+    test('the header names the source that produced the file', () async {
+      await engine.startRecording(configFor('Device'));
+      expect(engine.getMetadata().deviceId, 'PortaCardio 6');
+    });
+
+    test('a simulated recording is labelled as such in the header', () async {
+      engine.deviceId = 'PortaCardio 6 (simulated)';
+      await engine.startRecording(configFor('Demo'));
+      expect(engine.getMetadata().deviceId, 'PortaCardio 6 (simulated)');
+    });
   });
 
   group('Recording Configuration', () {

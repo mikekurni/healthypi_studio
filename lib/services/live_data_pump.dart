@@ -42,6 +42,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
   })  : _parser = dataParser,
         _usb = usb,
         _wifi = wifi,
+        _engine = recordingEngine,
         _throughput = throughput {
     _controller = ChannelController(
       initialSettings: ChartSettings(
@@ -66,6 +67,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
     _usb.addListener(_onTransportChanged);
     _wifi.addListener(_onTransportChanged);
     _startSimulation();
+    _syncRecordingIdentity();
     _vitalsTimer = Timer.periodic(const Duration(seconds: 1), (_) => _sampleVitals());
   }
 
@@ -84,6 +86,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
   final DataParser _parser;
   final UsbSerialService _usb;
   final WifiSerialService _wifi;
+  final RecordingEngine _engine;
   final ThroughputMonitor _throughput;
 
   late final ChannelController _controller;
@@ -281,6 +284,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
       _throughput.startMonitoring(_usb.isConnected ? 'usb' : 'wifi');
       debugPrint('✅ Acquisition source: device '
           '(${_usb.isConnected ? "USB 500 Hz" : "WiFi 250 Hz"})');
+      _syncRecordingIdentity();
       notifyListeners();
       return;
     }
@@ -293,6 +297,7 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
       _throughput.stopAll();
       _startSimulation();
       debugPrint('📊 Acquisition source: simulated (no transport attached)');
+      _syncRecordingIdentity();
       notifyListeners();
       return;
     }
@@ -303,6 +308,13 @@ class LiveDataPump extends ChangeNotifier with WidgetsBindingObserver {
         _usb.isConnected ? _ecgSampleRate : _wifiSampleRate,
       );
     }
+  }
+
+  /// Demo data runs the same pipeline as a device, so the file must not claim
+  /// to have come off a board.
+  void _syncRecordingIdentity() {
+    _engine.deviceId =
+        isSimulated ? 'PortaCardio 6 (simulated)' : 'PortaCardio 6';
   }
 
   void _onParserData() {
