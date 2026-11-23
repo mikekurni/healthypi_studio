@@ -242,7 +242,17 @@ class RecordingsScreenState extends State<RecordingsScreen> {
         _ModalityFilter.ppg => 'ppg',
         _ModalityFilter.all => '',
       };
-      return r.channels.any((c) => c.toLowerCase().contains(needle));
+      // Match on the channel ids (stable) rather than the display names, which
+      // a user can rename and which never contained 'ecg' to begin with.
+      final ids = r.metadata?.channels.map((c) => c.id.toLowerCase()) ??
+          const <String>[];
+      final nameMatch = needle == 'ecg'
+          ? r.channels.any((c) {
+              final l = c.toLowerCase();
+              return l.contains('ecg') || l.contains('lead') || l.contains('v1');
+            })
+          : r.channels.any((c) => c.toLowerCase().contains(needle));
+      return ids.any((c) => c.contains(needle)) || nameMatch;
     }).toList();
     rows.sort((a, b) => _newestFirst
         ? b.createdAt.compareTo(a.createdAt)
