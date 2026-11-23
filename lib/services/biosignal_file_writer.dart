@@ -18,6 +18,10 @@ class BiosignalFileWriter {
   int _blockSequence = 0;
   int _bytesWritten = 0;
 
+  /// The columns every sample row carries, in the order the header declares.
+  /// The reader walks the header, so the writer must not rely on map order.
+  List<String> _channelOrder = const [];
+
   /// Every byte handed to the sink: header, blocks, events, index and footer.
   int get bytesWritten => _bytesWritten;
   bool _headerWritten = false;
@@ -68,6 +72,7 @@ class BiosignalFileWriter {
     buffer.add(_uint64ToBytes(metadata.totalSamples));
 
     // Channel configurations
+    _channelOrder = [for (final channel in metadata.channels) channel.id];
     for (final channel in metadata.channels) {
       buffer.add(_stringToBytes(channel.id, 32));
       buffer.add(_stringToBytes(channel.name, 64));
@@ -143,8 +148,11 @@ class BiosignalFileWriter {
       buffer.add(_uint32ToBytes(sample.sequenceNumber));
       buffer.add(_int64ToBytes(sample.timestampMicros));
 
-      for (final value in sample.values.values) {
-        buffer.add(_float64ToBytes(value));
+      // One column per header channel, in header order. A channel absent from
+      // this sample is written as NaN: the device did not report it, and a
+      // zero would read as a flat measurement.
+      for (final id in _channelOrder) {
+        buffer.add(_float64ToBytes(sample.values[id] ?? double.nan));
       }
     }
 

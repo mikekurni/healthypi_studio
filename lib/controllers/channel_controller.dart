@@ -350,18 +350,11 @@ class ChannelController extends ChangeNotifier {
       }
     }
 
-    // Forward to recording bridge if recording is active.
-    //
-    // Computed channels (Lead III, aVR, aVL, aVF) stay out: they are a display
-    // transform of the measured leads, so the file holds only what the device
-    // reported and an analysis tool rebuilds the rest from Lead I and II.
+    // Forward to recording bridge if recording is active. Derived leads go
+    // with the rest: a saved file should open with the leads that were on
+    // screen, and the writer orders columns by the header, not by this map.
     if (_recordingBridge != null) {
-      final recorded = <String, double>{};
-      for (final entry in processedValues.entries) {
-        if (_channels[entry.key]?.config.computed ?? false) continue;
-        recorded[entry.key] = entry.value;
-      }
-      _recordingBridge.onDataAdded(recorded);
+      _recordingBridge.onDataAdded(processedValues);
     }
 
     // Auto-scale channels that have autoscale enabled
@@ -504,11 +497,8 @@ class ChannelController extends ChangeNotifier {
           final channelData = entry.value;
           final channelConfig = channelData.config;
 
-          // Computed channels are not written; see the forwarding note in
-          // addDataPointsSync. Visibility is a display choice, so it must not
-          // decide which columns the header describes.
-          if (channelConfig.computed) continue;
-
+          // Visibility is a display choice, so it must not decide which
+          // columns the header describes. Derived leads are recorded too.
           channelInfoList.add(ChannelInfo(
             id: channelId,
             name: channelConfig.label,

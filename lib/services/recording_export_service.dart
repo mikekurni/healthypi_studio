@@ -128,8 +128,9 @@ class RecordingExportService extends ChangeNotifier {
                 : start
                     .add(Duration(microseconds: sample.timestampMicros))
                     .toIso8601String(),
-          for (final c in channels)
-            sample.values[c.id]?.toStringAsFixed(opts.decimalPrecision) ?? '',
+          // NaN marks a sample the channel did not carry; write it as an empty
+          // cell rather than the text "NaN".
+          for (final c in channels) _cell(sample.values[c.id], opts),
         ];
         sink.write('${row.join(sep)}$eol');
         written++;
@@ -188,6 +189,13 @@ class RecordingExportService extends ChangeNotifier {
       await sink?.close();
     }
   }
+
+  /// A CSV cell for one channel value. A channel that carried no sample is
+  /// written as NaN by the recorder, so it becomes an empty cell.
+  static String _cell(double? value, CSVExportOptions opts) =>
+      value == null || !value.isFinite
+          ? ''
+          : value.toStringAsFixed(opts.decimalPrecision);
 
   /// Export HRV packets to CSV format
   ///

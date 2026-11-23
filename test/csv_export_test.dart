@@ -88,8 +88,37 @@ void main() {
     expect(rows[3], '0.00,1.00,-0.50');
   });
 
-  test('the metadata header is optional and off means no # lines', () async {
-    final source = await writeRecording(3);
+  test('a sample a channel did not carry exports as an empty cell', () async {
+    final file = File('${tmp.path}/gap.hpd');
+    final writer = BiosignalFileWriter(file);
+    await writer.writeHeader(RecordingMetadata(
+      deviceId: 'HealthyPi 6',
+      channels: channels,
+      recordingDuration: const Duration(milliseconds: 1),
+      totalSamples: 1,
+    ));
+    await writer.writeSamples([
+      MultiChannelSample(
+        sequenceNumber: 0,
+        timestampMicros: 0,
+        values: {'ecg1': 1.0},
+      ),
+    ]);
+    await writer.finalize();
+
+    final out = await RecordingExportService().exportToCSV(
+      inputFilePath: file.path,
+      outputFileName: 'gap.csv',
+      outputDirectory: tmp,
+      options: CSVExportOptions(decimalPrecision: 2, includeMetadata: false),
+    );
+    final rows = (await File(out!).readAsLines())
+        .where((l) => !l.startsWith('#') && l.isNotEmpty)
+        .toList();
+    expect(rows[1], '0.00,1.00,');
+  });
+
+  test('the metadata header is optional and off means no # lines', () async {    final source = await writeRecording(3);
     final out = await RecordingExportService().exportToCSV(
       inputFilePath: source.path,
       outputFileName: 'bare.csv',

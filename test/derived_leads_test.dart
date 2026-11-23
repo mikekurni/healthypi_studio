@@ -39,7 +39,7 @@ void main() {
       }
     });
 
-    test('are marked computed and never reach the recording bridge', () {
+    test('are marked computed and recorded with the measured leads', () {
       final controller = ChannelController(
         initialChannels: [
           ChannelConfiguration(id: 'ecg1', label: 'Lead I', unit: 'mV'),
@@ -62,9 +62,9 @@ void main() {
       });
 
       expect(bridge.last, isNotNull);
-      expect(bridge.last!.keys, containsAll(['ecg1', 'ecg2']));
-      expect(bridge.last!.containsKey('avr'), isFalse,
-          reason: 'computed leads are rebuilt from Lead I and II on read');
+      expect(bridge.last!.keys, containsAll(['ecg1', 'ecg2', 'avr']));
+      expect(bridge.last!['avr'], LiveDataPump.derivedLeads(1.0, 2.0)['avr'],
+          reason: 'a saved recording should open with the leads on screen');
       expect(controller.getChannel('avr')!.buffer.first.value,
           LiveDataPump.derivedLeads(1.0, 2.0)['avr'],
           reason: 'the channel itself still buffers the computed value');

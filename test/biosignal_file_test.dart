@@ -96,8 +96,57 @@ void main() {
     expect(read.single.values['ppg'], -7.5);
   });
 
-  test('non-ASCII channel units survive the round trip', () async {
+  test('columns follow the header order, not the sample map order', () async {
     final channels = [
+      ChannelInfo(id: 'lead_iii', name: 'Lead III', unit: 'mV',
+          samplingRate: 500),
+      ChannelInfo(id: 'ecg1', name: 'Lead I', unit: 'mV', samplingRate: 500),
+    ];
+    // A live packet builds the map in acquisition order, which differs from
+    // the channel list a recording declares. The reader walks the header.
+    final reader = BiosignalFileReader(await write(
+      meta(channels: channels),
+      [
+        MultiChannelSample(
+          sequenceNumber: 0,
+          timestampMicros: 0,
+          values: {'ecg1': 1.25, 'lead_iii': -0.5},
+        ),
+      ],
+    ));
+    await reader.open();
+    final read = await reader.readSamples().toList();
+    await reader.close();
+
+    expect(read.single.values['lead_iii'], -0.5);
+    expect(read.single.values['ecg1'], 1.25);
+  });
+
+  test('a channel absent from a sample reads back as NaN, not zero', () async {
+    final channels = [
+      ChannelInfo(id: 'ecg1', name: 'Lead I', unit: 'mV', samplingRate: 500),
+      ChannelInfo(id: 'ppg', name: 'PPG', unit: 'a.u.', samplingRate: 125),
+    ];
+    final reader = BiosignalFileReader(await write(
+      meta(channels: channels),
+      [
+        MultiChannelSample(
+          sequenceNumber: 0,
+          timestampMicros: 0,
+          values: {'ecg1': 2.0},
+        ),
+      ],
+    ));
+    await reader.open();
+    final read = await reader.readSamples().toList();
+    await reader.close();
+
+    expect(read.single.values['ecg1'], 2.0);
+    expect(read.single.values['ppg']!.isNaN, isTrue,
+        reason: 'an unreported sample must not look like a measured zero');
+  });
+
+  test('non-ASCII channel units survive the round trip', () async {    final channels = [
       ChannelInfo(id: 'resp', name: 'Respiration', unit: 'Ω', samplingRate: 500),
       ChannelInfo(id: 'temp', name: 'Temperature', unit: '°C', samplingRate: 1),
     ];
