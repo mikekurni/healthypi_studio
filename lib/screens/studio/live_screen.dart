@@ -265,8 +265,10 @@ class _AcquisitionToolbar extends StatelessWidget {
         const SizedBox(width: 10),
         Container(width: 1, height: 20, color: p.outlineSoft),
         const SizedBox(width: 10),
-        // No painter reads `showCursors`, so this toggled a flag and drew
-        // nothing. Visible and disabled until a measurement tool exists.
+        // TODO(next feature): on-screen calipers — time/amplitude cursors on a
+        // trace with a readout. Needs cursor painting in HpiWaveTrace, pointer
+        // handling, snap-to-sample, and a readout widget. ~half a day.
+        // No painter reads `showCursors` today, so the button stays disabled.
         HpiToolButton(
           icon: Icons.straighten,
           label: 'Calipers — not available',
