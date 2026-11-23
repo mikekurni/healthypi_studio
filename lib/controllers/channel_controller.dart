@@ -537,6 +537,7 @@ class ChannelController extends ChangeNotifier {
     if (_recordingEngine != null) {
       try {
         await _recordingEngine.stopRecording();
+        _recordingEngine.reset();
         debugPrint('✅ RecordingEngine stopped');
       } catch (e) {
         debugPrint('❌ Failed to stop RecordingEngine: $e');
