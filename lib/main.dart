@@ -1,6 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -30,19 +35,97 @@ void main() async {
   if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
     await windowManager.ensureInitialized();
 
-    const windowOptions = WindowOptions(
-      size: Size(1600, 1000),
-      minimumSize: Size(1200, 800),
-      title: 'PortaStudio',
-    );
+    final options = await _loadWindowOptions();
+    final saver = _WindowStateSaver();
 
-    windowManager.waitUntilReadyToShow(windowOptions, () async {
+    windowManager.waitUntilReadyToShow(options, () async {
       await windowManager.show();
+      if (_savedPosition != null) {
+        await windowManager.setPosition(_savedPosition!);
+      }
       await windowManager.focus();
     });
+    windowManager.addListener(saver);
   }
 
   runApp(const HealthyPiStudio());
+}
+
+const _defaultWindowSize = Size(1600, 1000);
+const _minimumWindowSize = Size(1200, 800);
+
+Offset? _savedPosition;
+
+Future<WindowOptions> _loadWindowOptions() async {
+  Size size = _defaultWindowSize;
+  try {
+    final dir = await getApplicationSupportDirectory();
+    final file = File('${dir.path}/window_state.json');
+    if (await file.exists()) {
+      final data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      size = Size((data['w'] as num).toDouble(), (data['h'] as num).toDouble());
+      if (data['x'] != null && data['y'] != null) {
+        _savedPosition = Offset((data['x'] as num).toDouble(), (data['y'] as num).toDouble());
+      }
+    } else {
+      // First launch: clamp the default to the screen so the window never
+      // opens larger than the display it lands on.
+      final view = ui.PlatformDispatcher.instance.views.first;
+      final visible = Size(
+        view.physicalSize.width / view.devicePixelRatio,
+        view.physicalSize.height / view.devicePixelRatio,
+      );
+      size = Size(
+        _defaultWindowSize.width.clamp(_minimumWindowSize.width, visible.width - 40),
+        _defaultWindowSize.height.clamp(_minimumWindowSize.height, visible.height - 40),
+      );
+    }
+  } catch (_) {
+    size = _defaultWindowSize;
+  }
+  size = Size(
+    size.width.clamp(_minimumWindowSize.width, double.infinity),
+    size.height.clamp(_minimumWindowSize.height, double.infinity),
+  );
+  return WindowOptions(
+    size: size,
+    center: _savedPosition == null,
+    minimumSize: _minimumWindowSize,
+    title: 'PortaStudio',
+  );
+}
+
+class _WindowStateSaver extends WindowListener {
+  Timer? _timer;
+
+  @override
+  void onWindowResized() => _schedule();
+
+  @override
+  void onWindowMoved() => _schedule();
+
+  @override
+  void onWindowClose() {
+    _timer?.cancel();
+    _save();
+  }
+
+  void _schedule() {
+    _timer?.cancel();
+    _timer = Timer(const Duration(milliseconds: 400), _save);
+  }
+
+  Future<void> _save() async {
+    try {
+      final size = await windowManager.getSize();
+      final pos = await windowManager.getPosition();
+      final dir = await getApplicationSupportDirectory();
+      final file = File('${dir.path}/window_state.json');
+      await file.writeAsString(
+        jsonEncode({'w': size.width, 'h': size.height, 'x': pos.dx, 'y': pos.dy}),
+      );
+    } catch (_) {}
+  }
 }
 
 class HealthyPiStudio extends StatelessWidget {
