@@ -247,11 +247,24 @@ class _StudioHomeState extends State<StudioHome> {
   Future<void> _toggleRecording() async {
     final engine = context.read<RecordingEngine>();
     final pump = context.read<LiveDataPump>();
+    final session = context.read<StudioSession>();
     if (engine.state == RecordingState.recording ||
         engine.state == RecordingState.paused) {
       await stopRecordingAndExport(context);
     } else {
-      await pump.controller.startRecording();
+      await pump.controller.startRecording(
+        subjectMetadata: SubjectMetadata(
+          subjectId: session.subject.isNotEmpty ? session.subject : session.sessionId,
+        ),
+        sessionMetadata: SessionMetadata(
+          protocolName: session.protocolNote.isNotEmpty
+              ? session.protocolNote
+              : session.sessionId,
+          location: null,
+          operator: null,
+          notes: 'Session ${session.sessionId}',
+        ),
+      );
     }
   }
 }
@@ -319,6 +332,7 @@ class RecordButton extends StatelessWidget {
     final p = context.hpi;
     final engine = context.watch<RecordingEngine>();
     final pump = context.watch<LiveDataPump>();
+    final session = context.watch<StudioSession>();
     final recording = engine.state == RecordingState.recording ||
         engine.state == RecordingState.paused;
 
@@ -332,7 +346,19 @@ class RecordButton extends StatelessWidget {
         if (recording) {
           await stopRecordingAndExport(context);
         } else {
-          await pump.controller.startRecording();
+          await pump.controller.startRecording(
+        subjectMetadata: SubjectMetadata(
+          subjectId: session.subject.isNotEmpty ? session.subject : session.sessionId,
+        ),
+        sessionMetadata: SessionMetadata(
+          protocolName: session.protocolNote.isNotEmpty
+              ? session.protocolNote
+              : session.sessionId,
+          location: null,
+          operator: null,
+          notes: 'Session ${session.sessionId}',
+        ),
+      );
         }
       },
     );

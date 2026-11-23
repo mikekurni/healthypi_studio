@@ -479,7 +479,10 @@ class ChannelController extends ChangeNotifier {
   // ============= RECORDING MANAGEMENT =============
 
   /// Start recording
-  Future<void> startRecording() async {
+  Future<void> startRecording({
+    SubjectMetadata? subjectMetadata,
+    SessionMetadata? sessionMetadata,
+  }) async {
     _recordingStartTime = DateTime.now();
     _totalSamplesRecorded = 0;
     _recordingUpdateCounter = 0;
@@ -514,6 +517,8 @@ class ChannelController extends ChangeNotifier {
         final config = RecordingConfig(
           sessionName: 'Recording_${DateTime.now().toString().replaceAll(' ', '_')}',
           channels: channelInfoList,
+          subjectMetadata: subjectMetadata,
+          sessionMetadata: sessionMetadata,
         );
 
         await _recordingEngine.startRecording(config);

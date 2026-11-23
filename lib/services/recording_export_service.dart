@@ -87,6 +87,42 @@ class RecordingExportService extends ChangeNotifier {
         sink.write(
             '# Duration: ${_formatDuration(metadata.recordingDuration)}$eol');
         sink.write('# Total Samples: ${metadata.totalSamples}$eol');
+        final subject = metadata.subjectMetadata;
+        if (subject != null) {
+          if (subject.subjectId != null && subject.subjectId!.isNotEmpty) {
+            sink.write('# Subject ID: ${subject.subjectId}$eol');
+          }
+          if (subject.age != null) {
+            sink.write('# Subject Age: ${subject.age}$eol');
+          }
+          if (subject.gender != null && subject.gender!.isNotEmpty) {
+            sink.write('# Subject Gender: ${subject.gender}$eol');
+          }
+          if (subject.condition != null && subject.condition!.isNotEmpty) {
+            sink.write('# Subject Condition: ${subject.condition}$eol');
+          }
+          if (subject.notes != null && subject.notes!.isNotEmpty) {
+            sink.write('# Subject Notes: ${subject.notes}$eol');
+          }
+        }
+        final sessionMeta = metadata.sessionMetadata;
+        if (sessionMeta != null) {
+          if (sessionMeta.protocolName.isNotEmpty) {
+            sink.write('# Protocol: ${sessionMeta.protocolName}$eol');
+          }
+          if (sessionMeta.location != null && sessionMeta.location!.isNotEmpty) {
+            sink.write('# Location: ${sessionMeta.location}$eol');
+          }
+          if (sessionMeta.operator != null && sessionMeta.operator!.isNotEmpty) {
+            sink.write('# Operator: ${sessionMeta.operator}$eol');
+          }
+          if (sessionMeta.notes != null && sessionMeta.notes!.isNotEmpty) {
+            sink.write('# Session Notes: ${sessionMeta.notes}$eol');
+          }
+          if (sessionMeta.customTags.isNotEmpty) {
+            sink.write('# Tags: ${sessionMeta.customTags}$eol');
+          }
+        }
         sink.write('#$eol');
       }
 
