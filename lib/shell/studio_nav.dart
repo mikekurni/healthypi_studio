@@ -118,6 +118,10 @@ enum InspectorTool {
 class StudioNavController extends ChangeNotifier {
   StudioDestination _destination = StudioDestination.live;
   bool _focusMode = false;
+
+  /// Which Settings category the Session pill should reveal. The pill sets
+  /// this before navigating, and SettingsScreen listens to it.
+  final ValueNotifier<String> settingsCategory = ValueNotifier('appearance');
   bool _dockExpanded = false;
   bool _connectDismissed = false;
   InspectorTool _tool = InspectorTool.channels;

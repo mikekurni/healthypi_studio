@@ -236,7 +236,10 @@ class _SessionPill extends StatelessWidget {
     final nav = context.read<StudioNavController>();
     return Consumer<StudioSession>(
       builder: (context, session, _) => HpiChip(
-        onTap: () => nav.go(StudioDestination.settings),
+        onTap: () {
+          nav.settingsCategory.value = 'session';
+          nav.go(StudioDestination.settings);
+        },
         children: [
           Icon(Icons.badge_outlined, size: 15, color: p.textMuted),
           Text(

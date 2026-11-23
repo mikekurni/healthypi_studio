@@ -51,6 +51,33 @@ class SettingsScreen extends StatefulWidget {
 class SettingsScreenState extends State<SettingsScreen> {
   _Category _category = _Category.appearance;
 
+  @override
+  void initState() {
+    super.initState();
+    final nav = context.read<StudioNavController>();
+    _apply(nav.settingsCategory.value);
+    nav.settingsCategory.addListener(_onSettingsCategoryChanged);
+  }
+
+  @override
+  void dispose() {
+    context.read<StudioNavController>().settingsCategory
+        .removeListener(_onSettingsCategoryChanged);
+    super.dispose();
+  }
+
+  void _onSettingsCategoryChanged() {
+    if (!mounted) return;
+    setState(() => _apply(context.read<StudioNavController>().settingsCategory.value));
+  }
+
+  void _apply(String name) {
+    _category = _Category.values.firstWhere(
+      (c) => c.name == name,
+      orElse: () => _Category.appearance,
+    );
+  }
+
   List<Widget> buildStatusItems(BuildContext context) {
     final p = context.hpi;
     final parser = context.watch<DataParser>();
@@ -75,7 +102,7 @@ class SettingsScreenState extends State<SettingsScreen> {
         children: [
           SizedBox(width: 190, child: _CategoryRail(
             category: _category,
-            onSelect: (c) => setState(() => _category = c),
+            onSelect: (c) => context.read<StudioNavController>().settingsCategory.value = c.name,
           )),
           const SizedBox(width: HpiMetrics.columnGap),
           Expanded(
