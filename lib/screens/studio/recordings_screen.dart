@@ -96,10 +96,21 @@ class RecordingsScreenState extends State<RecordingsScreen> {
         subtitle: '${files.totalRecordings} recordings · '
             '${formatBytes(files.totalSizeBytes)} on disk'
             '${_selected.isEmpty ? "" : " · ${_selected.length} selected"}',
-        action: HpiGhostButton(
-          label: 'Reveal folder',
-          icon: Icons.folder_open,
-          onPressed: _revealFolder,
+        action: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HpiGhostButton(
+              label: 'Open record',
+              icon: Icons.folder_open,
+              onPressed: _revealFolder,
+            ),
+            const SizedBox(width: 8),
+            HpiGhostButton(
+              label: 'Open export',
+              icon: Icons.folder_open,
+              onPressed: _lastExportPath == null ? null : _revealExportFolder,
+            ),
+          ],
         ),
       ),
       child: ScreenColumns(
@@ -317,6 +328,22 @@ class RecordingsScreenState extends State<RecordingsScreen> {
 
   Future<void> _revealFolder() async {
     final dir = await context.read<RecordingFileService>().getRecordingsDirectory();
+    if (!await dir.exists()) await dir.create(recursive: true);
+    if (Platform.isMacOS) {
+      await Process.run('open', [dir.path]);
+    } else if (Platform.isWindows) {
+      await Process.run('explorer', [dir.path]);
+    } else if (Platform.isLinux) {
+      await Process.run('xdg-open', [dir.path]);
+    } else if (mounted) {
+      _toast(dir.path);
+    }
+  }
+
+  Future<void> _revealExportFolder() async {
+    final path = _lastExportPath;
+    if (path == null) return;
+    final dir = Directory(path).parent;
     if (!await dir.exists()) await dir.create(recursive: true);
     if (Platform.isMacOS) {
       await Process.run('open', [dir.path]);
