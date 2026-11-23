@@ -146,6 +146,38 @@ void main() {
         reason: 'an unreported sample must not look like a measured zero');
   });
 
+  test('finalize writes the final duration and sample count into the header', () async {
+    final zeroMeta = RecordingMetadata(
+      deviceId: 'HealthyPi 6',
+      channels: [ChannelInfo(id: 'ecg1', name: 'ECG I', unit: 'mV', samplingRate: 500)],
+      recordingDuration: Duration.zero,
+      totalSamples: 0,
+    );
+    final file = File('${tmp.path}/final.hpd');
+    final writer = BiosignalFileWriter(file);
+    await writer.writeHeader(zeroMeta);
+    await writer.writeSamples([
+      for (int i = 0; i < 3; i++)
+        MultiChannelSample(
+          sequenceNumber: i,
+          timestampMicros: i * 2000,
+          values: {'ecg1': i * 1.5},
+        ),
+    ]);
+    await writer.finalize(
+      recordingDuration: const Duration(seconds: 1),
+      totalSamples: 3,
+    );
+
+    final reader = BiosignalFileReader(file);
+    await reader.open();
+    final header = await reader.readHeader();
+    await reader.close();
+
+    expect(header.totalSamples, 3);
+    expect(header.recordingDuration, const Duration(seconds: 1));
+  });
+
   test('non-ASCII channel units survive the round trip', () async {    final channels = [
       ChannelInfo(id: 'resp', name: 'Respiration', unit: 'Ω', samplingRate: 500),
       ChannelInfo(id: 'temp', name: 'Temperature', unit: '°C', samplingRate: 1),

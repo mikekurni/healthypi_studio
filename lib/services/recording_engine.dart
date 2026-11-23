@@ -202,7 +202,10 @@ class RecordingEngine extends ChangeNotifier {
 
       // Finalize and close file
       if (_fileWriter != null) {
-        await _fileWriter!.finalize();
+        await _fileWriter!.finalize(
+          recordingDuration: elapsedTime,
+          totalSamples: _samplesRecorded,
+        );
         // Keep the final size once the writer is gone.
         _fileSizeBytes = _fileWriter!.bytesWritten;
         _fileWriter = null;

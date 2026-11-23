@@ -12,6 +12,7 @@ class BiosignalFileWriter {
   static const int indexMarker = 0x494E4458; // 'INDX'
   static const int fileHeaderSize = 100;
 
+  final File _file;
   final IOSink _sink;
   final int _bufferSize;
 
@@ -27,8 +28,13 @@ class BiosignalFileWriter {
   bool _headerWritten = false;
   final List<_IndexEntry> _indexEntries = [];
 
+  // Byte offsets of the two fields finalize() rewrites, set in writeHeader.
+  int _recordingDurationOffset = -1;
+  int _totalSamplesOffset = -1;
+
   BiosignalFileWriter(File file, {int bufferSize = blockSize})
-      : _bufferSize = bufferSize,
+      : _file = file,
+        _bufferSize = bufferSize,
         _sink = file.openWrite();
 
   /// Write file header with metadata
@@ -68,7 +74,9 @@ class BiosignalFileWriter {
     buffer.add(_uint16ToBytes(metadata.channels.length));
 
     // Recording parameters
+    _recordingDurationOffset = buffer.length;
     buffer.add(_int64ToBytes(metadata.recordingDuration.inMicroseconds));
+    _totalSamplesOffset = buffer.length;
     buffer.add(_uint64ToBytes(metadata.totalSamples));
 
     // Channel configurations
@@ -199,44 +207,69 @@ class BiosignalFileWriter {
   }
 
   /// Finalize file and close
-  Future<void> finalize() async {
+  Future<void> finalize({
+    Duration? recordingDuration,
+    int? totalSamples,
+  }) async {
     if (!_headerWritten) {
       throw RecordingException('Cannot finalize without header');
     }
 
-    // Write index if present
-    if (_indexEntries.isNotEmpty) {
-      final buffer = BytesBuilder();
-      buffer.add(_uint32ToBytes(indexMarker));
-      buffer.add(_uint32ToBytes(_indexEntries.length));
-
-      for (final entry in _indexEntries) {
-        buffer.add(_int64ToBytes(entry.timestamp));
-        buffer.add(_uint64ToBytes(entry.fileOffset));
-        buffer.add(_uint64ToBytes(entry.sampleCount));
-      }
-
-      final indexBytes = buffer.toBytes();
-      _sink.add(indexBytes);
-      _bytesWritten += indexBytes.length;
-    }
-
-    // Write footer
-    final footer = BytesBuilder();
-    footer.addByte(0x45); // 'E'
-    footer.addByte(0x4E); // 'N'
-    footer.addByte(0x44); // 'D'
-    footer.addByte(0x4F); // 'O'
-    footer.addByte(0x46); // 'F'
-    footer.addByte(0x00); // null terminator
-    footer.add(_uint16ToBytes(1)); // Format version
-
-    final footerBytes = footer.toBytes();
-    _sink.add(footerBytes);
-    _bytesWritten += footerBytes.length;
-
+    // Flush the sample data before touching the header.
     await _sink.flush();
     await _sink.close();
+
+    // The header was written before the totals were known, so patch the two
+    // fixed-offset fields now that the file is seekable.
+    if (recordingDuration != null || totalSamples != null) {
+      final bytes = await _file.readAsBytes();
+      final view = ByteData.sublistView(bytes);
+      if (recordingDuration != null && _recordingDurationOffset >= 0) {
+        view.setInt64(_recordingDurationOffset,
+            recordingDuration.inMicroseconds, Endian.little);
+      }
+      if (totalSamples != null && _totalSamplesOffset >= 0) {
+        view.setUint64(_totalSamplesOffset, totalSamples, Endian.little);
+      }
+      await _file.writeAsBytes(bytes, flush: true);
+    }
+
+    // Append the index and footer with a fresh sink.
+    final sink = _file.openWrite(mode: FileMode.append);
+    try {
+      if (_indexEntries.isNotEmpty) {
+        final buffer = BytesBuilder();
+        buffer.add(_uint32ToBytes(indexMarker));
+        buffer.add(_uint32ToBytes(_indexEntries.length));
+
+        for (final entry in _indexEntries) {
+          buffer.add(_int64ToBytes(entry.timestamp));
+          buffer.add(_uint64ToBytes(entry.fileOffset));
+          buffer.add(_uint64ToBytes(entry.sampleCount));
+        }
+
+        final indexBytes = buffer.toBytes();
+        sink.add(indexBytes);
+        _bytesWritten += indexBytes.length;
+      }
+
+      final footer = BytesBuilder();
+      footer.addByte(0x45); // 'E'
+      footer.addByte(0x4E); // 'N'
+      footer.addByte(0x44); // 'D'
+      footer.addByte(0x4F); // 'O'
+      footer.addByte(0x46); // 'F'
+      footer.addByte(0x00); // null terminator
+      footer.add(_uint16ToBytes(1)); // Format version
+
+      final footerBytes = footer.toBytes();
+      sink.add(footerBytes);
+      _bytesWritten += footerBytes.length;
+
+      await sink.flush();
+    } finally {
+      await sink.close();
+    }
   }
 
   // Helper methods for type conversion
